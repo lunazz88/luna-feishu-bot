@@ -1,0 +1,3541 @@
+[
+  {
+    "date": "0605",
+    "row_counts": {
+      "ads": 453,
+      "self": 456,
+      "fixed": 421,
+      "deleted_from_self": 55
+    },
+    "match_counts": {
+      "project+exact_code+country+kpi": 405,
+      "matched": 417,
+      "all_core_metrics_close": 282,
+      "project+exact_code+country": 5,
+      "project+code+country+kpi": 5,
+      "project+code": 2,
+      "unmatched": 4
+    },
+    "duplicate_code_count": 58,
+    "duplicate_code_examples": [
+      {
+        "code": "1501",
+        "ads_rows": [
+          {
+            "row": 2,
+            "project": "(Fine)Winbd-BD",
+            "shooter": "Fawn",
+            "country": "孟加拉",
+            "kpi": "15"
+          },
+          {
+            "row": 134,
+            "project": "(Fine)KLwin-MY",
+            "shooter": "Chen",
+            "country": "马来西亚",
+            "kpi": "95"
+          }
+        ]
+      },
+      {
+        "code": "1502",
+        "ads_rows": [
+          {
+            "row": 3,
+            "project": "(Fine)Winbd-BD",
+            "shooter": "Beibei",
+            "country": "孟加拉",
+            "kpi": "15"
+          },
+          {
+            "row": 135,
+            "project": "(Fine)KLwin-MY",
+            "shooter": "Nicky",
+            "country": "马来西亚",
+            "kpi": "95"
+          }
+        ]
+      },
+      {
+        "code": "1503",
+        "ads_rows": [
+          {
+            "row": 4,
+            "project": "(Fine)Winbd-BD",
+            "shooter": "Chen",
+            "country": "孟加拉",
+            "kpi": "15"
+          },
+          {
+            "row": 136,
+            "project": "(Fine)KLwin-MY",
+            "shooter": "Fawn",
+            "country": "马来西亚",
+            "kpi": "95"
+          }
+        ]
+      },
+      {
+        "code": "8",
+        "ads_rows": [
+          {
+            "row": 20,
+            "project": "(Fine)Winbd-BD",
+            "shooter": "Frank",
+            "country": "孟加拉",
+            "kpi": "15"
+          },
+          {
+            "row": 116,
+            "project": "(Fine)Betrupees-PK",
+            "shooter": "Lane",
+            "country": "巴基斯坦",
+            "kpi": "17"
+          },
+          {
+            "row": 196,
+            "project": "(Fine)Winmyr-MY",
+            "shooter": "Phoebe",
+            "country": "马来西亚",
+            "kpi": "120"
+          },
+          {
+            "row": 244,
+            "project": "(Fine)Slotsmy-MY",
+            "shooter": "Wayne",
+            "country": "马来西亚",
+            "kpi": "120"
+          },
+          {
+            "row": 299,
+            "project": "(Fine)Vipganer-MX",
+            "shooter": "Phoebe",
+            "country": "墨西哥",
+            "kpi": "22"
+          }
+        ]
+      },
+      {
+        "code": "10",
+        "ads_rows": [
+          {
+            "row": 21,
+            "project": "(Fine)Winbd-BD",
+            "shooter": "Cindy",
+            "country": "孟加拉",
+            "kpi": "15"
+          },
+          {
+            "row": 128,
+            "project": "(Fine)Winrm-MY",
+            "shooter": "Quest",
+            "country": "马来西亚",
+            "kpi": "95"
+          },
+          {
+            "row": 252,
+            "project": "(Fine)Slots-PK",
+            "shooter": "Cindy",
+            "country": "巴基斯坦",
+            "kpi": "17"
+          }
+        ]
+      },
+      {
+        "code": "14",
+        "ads_rows": [
+          {
+            "row": 22,
+            "project": "(Fine)Winbd-BD",
+            "shooter": "Cindy",
+            "country": "孟加拉",
+            "kpi": "15"
+          },
+          {
+            "row": 129,
+            "project": "(Fine)Winrm-MY",
+            "shooter": "Quest",
+            "country": "马来西亚",
+            "kpi": "95"
+          },
+          {
+            "row": 145,
+            "project": "(Fine)KLwin-MY",
+            "shooter": "Phoebe",
+            "country": "马来西亚",
+            "kpi": "95"
+          },
+          {
+            "row": 216,
+            "project": "(Fine)Winpkr-PK",
+            "shooter": "Kenny C",
+            "country": "巴基斯坦",
+            "kpi": "19"
+          }
+        ]
+      },
+      {
+        "code": "15",
+        "ads_rows": [
+          {
+            "row": 23,
+            "project": "(Fine)Winbd-BD",
+            "shooter": "Kenny C",
+            "country": "孟加拉",
+            "kpi": "15"
+          },
+          {
+            "row": 130,
+            "project": "(Fine)Winrm-MY",
+            "shooter": "Zoe",
+            "country": "马来西亚",
+            "kpi": "95"
+          },
+          {
+            "row": 146,
+            "project": "(Fine)KLwin-MY",
+            "shooter": "Kenny C",
+            "country": "马来西亚",
+            "kpi": "95"
+          }
+        ]
+      },
+      {
+        "code": "16",
+        "ads_rows": [
+          {
+            "row": 24,
+            "project": "(Fine)Winbd-BD",
+            "shooter": "Zoe",
+            "country": "孟加拉",
+            "kpi": "15"
+          },
+          {
+            "row": 131,
+            "project": "(Fine)Winrm-MY",
+            "shooter": "Zoe",
+            "country": "马来西亚",
+            "kpi": "95"
+          }
+        ]
+      }
+    ],
+    "deleted_examples": [
+      {
+        "row": 27,
+        "project": "01(Fine)Winbd-BD",
+        "code": "",
+        "shooter": "",
+        "metrics_nonblank": 0
+      },
+      {
+        "row": 38,
+        "project": "02(Fine)Bdbajee-BD",
+        "code": "",
+        "shooter": "",
+        "metrics_nonblank": 0
+      },
+      {
+        "row": 44,
+        "project": "03(Fine)Tbajee-BD",
+        "code": "",
+        "shooter": "",
+        "metrics_nonblank": 0
+      },
+      {
+        "row": 56,
+        "project": "05(Fine)Xbajee-BD",
+        "code": "",
+        "shooter": "",
+        "metrics_nonblank": 0
+      },
+      {
+        "row": 79,
+        "project": "07(Fine)Rbajee-BD",
+        "code": "",
+        "shooter": "",
+        "metrics_nonblank": 0
+      },
+      {
+        "row": 103,
+        "project": "08(Fine)Cbaji-BD",
+        "code": "",
+        "shooter": "",
+        "metrics_nonblank": 0
+      },
+      {
+        "row": 115,
+        "project": "09(Fine)Betrupees-PK",
+        "code": "",
+        "shooter": "",
+        "metrics_nonblank": 0
+      },
+      {
+        "row": 129,
+        "project": "10(Fine)Winrm-MY",
+        "code": "",
+        "shooter": "",
+        "metrics_nonblank": 0
+      },
+      {
+        "row": 145,
+        "project": "11(Fine)KLwin-MY",
+        "code": "",
+        "shooter": "",
+        "metrics_nonblank": 0
+      },
+      {
+        "row": 198,
+        "project": "14(Fine)Winpkr-PK",
+        "code": "tech01",
+        "shooter": "Wayne",
+        "metrics_nonblank": 5
+      },
+      {
+        "row": 199,
+        "project": "14(Fine)Winpkr-PK",
+        "code": "tech02",
+        "shooter": "Wendy",
+        "metrics_nonblank": 5
+      },
+      {
+        "row": 200,
+        "project": "14(Fine)Winpkr-PK",
+        "code": "tech03",
+        "shooter": "Yunyun",
+        "metrics_nonblank": 5
+      },
+      {
+        "row": 201,
+        "project": "14(Fine)Winpkr-PK",
+        "code": "tech04",
+        "shooter": "Mark",
+        "metrics_nonblank": 5
+      },
+      {
+        "row": 208,
+        "project": "14(Fine)Winpkr-PK",
+        "code": "",
+        "shooter": "",
+        "metrics_nonblank": 0
+      },
+      {
+        "row": 221,
+        "project": "16(Fine)Betpkr-PK",
+        "code": "",
+        "shooter": "",
+        "metrics_nonblank": 0
+      },
+      {
+        "row": 234,
+        "project": "19(Fine)Slotsmy-MY",
+        "code": "",
+        "shooter": "",
+        "metrics_nonblank": 0
+      },
+      {
+        "row": 242,
+        "project": "20(Fine)Slots-PK",
+        "code": "",
+        "shooter": "",
+        "metrics_nonblank": 0
+      },
+      {
+        "row": 271,
+        "project": "25(Fine)Winnpr-NP",
+        "code": "",
+        "shooter": "",
+        "metrics_nonblank": 0
+      },
+      {
+        "row": 292,
+        "project": "26(Fine)Vipganer-MX",
+        "code": "",
+        "shooter": "",
+        "metrics_nonblank": 0
+      },
+      {
+        "row": 347,
+        "project": "44(Tim)Betlah-MY",
+        "code": "",
+        "shooter": "",
+        "metrics_nonblank": 0
+      }
+    ],
+    "examples": {
+      "needs_project_prefix_strip": [],
+      "needs_code_prefix_strip": [
+        {
+          "fixed_row": 394,
+          "project": "(SLS)A26-PK",
+          "code": "1",
+          "shooter": "Mark",
+          "match_strategy": "project+code+country+kpi",
+          "ads_row": 422,
+          "ads_project": "(SLS)A26-PK",
+          "ads_code": "code01",
+          "ads_shooter": "Mark",
+          "metric_match": {
+            "spend": true,
+            "impressions": true,
+            "clicks": true,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "0",
+            "first_deposits": "0"
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "0",
+            "first_deposits": "0"
+          }
+        },
+        {
+          "fixed_row": 395,
+          "project": "(SLS)A26-PK",
+          "code": "2",
+          "shooter": "Wendy",
+          "match_strategy": "project+code+country+kpi",
+          "ads_row": 423,
+          "ads_project": "(SLS)A26-PK",
+          "ads_code": "code02",
+          "ads_shooter": "Wendy",
+          "metric_match": {
+            "spend": true,
+            "impressions": true,
+            "clicks": true,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "0",
+            "first_deposits": "0"
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "0",
+            "first_deposits": "0"
+          }
+        },
+        {
+          "fixed_row": 396,
+          "project": "(SLS)A26-PK",
+          "code": "3",
+          "shooter": "Anne",
+          "match_strategy": "project+code+country+kpi",
+          "ads_row": 424,
+          "ads_project": "(SLS)A26-PK",
+          "ads_code": "code03",
+          "ads_shooter": "Anne",
+          "metric_match": {
+            "spend": true,
+            "impressions": true,
+            "clicks": true,
+            "registrations": false,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "13.11",
+            "impressions": "836",
+            "clicks": "16",
+            "registrations": "1",
+            "first_deposits": "0"
+          },
+          "ads_metrics": {
+            "spend": "13.08",
+            "impressions": "836",
+            "clicks": "16",
+            "registrations": "0",
+            "first_deposits": "0"
+          }
+        },
+        {
+          "fixed_row": 397,
+          "project": "(SLS)A26-PK",
+          "code": "4",
+          "shooter": "Alan",
+          "match_strategy": "project+code+country+kpi",
+          "ads_row": 425,
+          "ads_project": "(SLS)A26-PK",
+          "ads_code": "code04",
+          "ads_shooter": "Alan",
+          "metric_match": {
+            "spend": true,
+            "impressions": true,
+            "clicks": true,
+            "registrations": false,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "14.12",
+            "impressions": "3682",
+            "clicks": "311",
+            "registrations": "3",
+            "first_deposits": "0"
+          },
+          "ads_metrics": {
+            "spend": "13.91",
+            "impressions": "3682",
+            "clicks": "311",
+            "registrations": "0",
+            "first_deposits": "0"
+          }
+        },
+        {
+          "fixed_row": 398,
+          "project": "(SLS)A26-PK",
+          "code": "5",
+          "shooter": "Imad",
+          "match_strategy": "project+code+country+kpi",
+          "ads_row": 426,
+          "ads_project": "(SLS)A26-PK",
+          "ads_code": "code05",
+          "ads_shooter": "Imad",
+          "metric_match": {
+            "spend": true,
+            "impressions": true,
+            "clicks": true,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "0",
+            "first_deposits": "0"
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "0",
+            "first_deposits": "0"
+          }
+        }
+      ],
+      "shooter_ignored_or_changed": [
+        {
+          "fixed_row": 2,
+          "project": "(Fine)Winbd-BD",
+          "code": "1501",
+          "shooter": "",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 2,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "1501",
+          "ads_shooter": "Fawn",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "0",
+            "first_deposits": "2"
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "0",
+            "first_deposits": "2"
+          }
+        },
+        {
+          "fixed_row": 3,
+          "project": "(Fine)Winbd-BD",
+          "code": "1502",
+          "shooter": "",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 3,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "1502",
+          "ads_shooter": "Beibei",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "0",
+            "first_deposits": "0"
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "0",
+            "first_deposits": "0"
+          }
+        },
+        {
+          "fixed_row": 16,
+          "project": "(Fine)Winbd-BD",
+          "code": "3302",
+          "shooter": "",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 16,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "3302",
+          "ads_shooter": "John",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "0",
+            "first_deposits": "0"
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "0",
+            "first_deposits": "0"
+          }
+        },
+        {
+          "fixed_row": 18,
+          "project": "(Fine)Winbd-BD",
+          "code": "3304",
+          "shooter": "",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 18,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "3304",
+          "ads_shooter": "Jerry",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "10",
+            "first_deposits": "4"
+          },
+          "ads_metrics": {
+            "spend": "79.48",
+            "impressions": "4806",
+            "clicks": "86",
+            "registrations": "10",
+            "first_deposits": "4"
+          }
+        },
+        {
+          "fixed_row": 27,
+          "project": "(Fine)Bdbajee-BD",
+          "code": "501",
+          "shooter": "",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 28,
+          "ads_project": "(Fine)Bdbajee-BD",
+          "ads_code": "501",
+          "ads_shooter": "Zinco",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "6",
+            "first_deposits": "0"
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "6",
+            "first_deposits": "0"
+          }
+        },
+        {
+          "fixed_row": 28,
+          "project": "(Fine)Bdbajee-BD",
+          "code": "502",
+          "shooter": "",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 29,
+          "ads_project": "(Fine)Bdbajee-BD",
+          "ads_code": "502",
+          "ads_shooter": "Melissa",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "1",
+            "first_deposits": "1"
+          },
+          "ads_metrics": {
+            "spend": "46.1",
+            "impressions": "11303",
+            "clicks": "184",
+            "registrations": "1",
+            "first_deposits": "1"
+          }
+        },
+        {
+          "fixed_row": 29,
+          "project": "(Fine)Bdbajee-BD",
+          "code": "503",
+          "shooter": "Phoebe",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 30,
+          "ads_project": "(Fine)Bdbajee-BD",
+          "ads_code": "503",
+          "ads_shooter": "Alan",
+          "metric_match": {
+            "spend": true,
+            "impressions": true,
+            "clicks": true,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "0",
+            "first_deposits": "0"
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "0",
+            "first_deposits": "0"
+          }
+        },
+        {
+          "fixed_row": 30,
+          "project": "(Fine)Bdbajee-BD",
+          "code": "504",
+          "shooter": "",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 31,
+          "ads_project": "(Fine)Bdbajee-BD",
+          "ads_code": "504",
+          "ads_shooter": "Jake",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "18",
+            "first_deposits": "9"
+          },
+          "ads_metrics": {
+            "spend": "97.98",
+            "impressions": "14497",
+            "clicks": "220",
+            "registrations": "18",
+            "first_deposits": "9"
+          }
+        },
+        {
+          "fixed_row": 69,
+          "project": "(Fine)Fbajee-BD",
+          "code": "vip133",
+          "shooter": "",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 73,
+          "ads_project": "(Fine)Fbajee-BD",
+          "ads_code": "vip133",
+          "ads_shooter": "CY",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "12",
+            "first_deposits": "6"
+          },
+          "ads_metrics": {
+            "spend": "89.13",
+            "impressions": "23334",
+            "clicks": "693",
+            "registrations": "12",
+            "first_deposits": "6"
+          }
+        },
+        {
+          "fixed_row": 70,
+          "project": "(Fine)Fbajee-BD",
+          "code": "vip134",
+          "shooter": "",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 74,
+          "ads_project": "(Fine)Fbajee-BD",
+          "ads_code": "vip134",
+          "ads_shooter": "Melissa",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "9",
+            "first_deposits": "6"
+          },
+          "ads_metrics": {
+            "spend": "60.03",
+            "impressions": "11813",
+            "clicks": "240",
+            "registrations": "9",
+            "first_deposits": "6"
+          }
+        },
+        {
+          "fixed_row": 79,
+          "project": "(Fine)Cbaji-BD",
+          "code": "102",
+          "shooter": "",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 85,
+          "ads_project": "(Fine)Cbaji-BD",
+          "ads_code": "102",
+          "ads_shooter": "Nico",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "15",
+            "first_deposits": "7"
+          },
+          "ads_metrics": {
+            "spend": "124.43",
+            "impressions": "30041",
+            "clicks": "1387",
+            "registrations": "15",
+            "first_deposits": "7"
+          }
+        },
+        {
+          "fixed_row": 81,
+          "project": "(Fine)Cbaji-BD",
+          "code": "201",
+          "shooter": "",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 87,
+          "ads_project": "(Fine)Cbaji-BD",
+          "ads_code": "201",
+          "ads_shooter": "Jerry",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "64",
+            "first_deposits": "28"
+          },
+          "ads_metrics": {
+            "spend": "455.77",
+            "impressions": "62345",
+            "clicks": "996",
+            "registrations": "64",
+            "first_deposits": "28"
+          }
+        }
+      ],
+      "zero_spend_but_reg_or_ftd_kept": [
+        {
+          "fixed_row": 2,
+          "project": "(Fine)Winbd-BD",
+          "code": "1501",
+          "shooter": "",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 2,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "1501",
+          "ads_shooter": "Fawn",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "0",
+            "first_deposits": "2"
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "0",
+            "first_deposits": "2"
+          }
+        },
+        {
+          "fixed_row": 6,
+          "project": "(Fine)Winbd-BD",
+          "code": "1505",
+          "shooter": "Sarah",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 6,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "1505",
+          "ads_shooter": "Sarah",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": false,
+            "first_deposits": false
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "",
+            "first_deposits": ""
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "163",
+            "first_deposits": "34"
+          }
+        },
+        {
+          "fixed_row": 8,
+          "project": "(Fine)Winbd-BD",
+          "code": "1507",
+          "shooter": "Sarah",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 8,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "1507",
+          "ads_shooter": "Sarah",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": false,
+            "first_deposits": false
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "",
+            "first_deposits": ""
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "0",
+            "first_deposits": "3"
+          }
+        },
+        {
+          "fixed_row": 9,
+          "project": "(Fine)Winbd-BD",
+          "code": "1508",
+          "shooter": "Sarah",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 9,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "1508",
+          "ads_shooter": "Sarah",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": false,
+            "first_deposits": false
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "",
+            "first_deposits": ""
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "59",
+            "first_deposits": "14"
+          }
+        },
+        {
+          "fixed_row": 11,
+          "project": "(Fine)Winbd-BD",
+          "code": "1510",
+          "shooter": "Sarah",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 11,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "1510",
+          "ads_shooter": "Sarah",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": false,
+            "first_deposits": false
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "",
+            "first_deposits": ""
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "144",
+            "first_deposits": "88"
+          }
+        },
+        {
+          "fixed_row": 21,
+          "project": "(Fine)Winbd-BD",
+          "code": "10",
+          "shooter": "Cindy",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 21,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "10",
+          "ads_shooter": "Cindy",
+          "metric_match": {
+            "spend": true,
+            "impressions": true,
+            "clicks": true,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "1",
+            "first_deposits": "2"
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "1",
+            "first_deposits": "2"
+          }
+        },
+        {
+          "fixed_row": 22,
+          "project": "(Fine)Winbd-BD",
+          "code": "14",
+          "shooter": "Cindy",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 22,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "14",
+          "ads_shooter": "Cindy",
+          "metric_match": {
+            "spend": true,
+            "impressions": true,
+            "clicks": true,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "2",
+            "first_deposits": "1"
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "2",
+            "first_deposits": "1"
+          }
+        },
+        {
+          "fixed_row": 23,
+          "project": "(Fine)Winbd-BD",
+          "code": "15",
+          "shooter": "Kenny C",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 23,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "15",
+          "ads_shooter": "Kenny C",
+          "metric_match": {
+            "spend": true,
+            "impressions": false,
+            "clicks": false,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "0",
+            "impressions": "198943",
+            "clicks": "3266",
+            "registrations": "381",
+            "first_deposits": "145"
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "381",
+            "first_deposits": "145"
+          }
+        },
+        {
+          "fixed_row": 25,
+          "project": "(Fine)Winbd-BD",
+          "code": "19",
+          "shooter": "Imad",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 25,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "19",
+          "ads_shooter": "Imad",
+          "metric_match": {
+            "spend": true,
+            "impressions": true,
+            "clicks": true,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "10",
+            "first_deposits": "2"
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "10",
+            "first_deposits": "2"
+          }
+        },
+        {
+          "fixed_row": 26,
+          "project": "(Fine)Winbd-BD",
+          "code": "33",
+          "shooter": "Kenny C",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 26,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "33",
+          "ads_shooter": "Kenny C",
+          "metric_match": {
+            "spend": true,
+            "impressions": false,
+            "clicks": false,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "0",
+            "impressions": "4806",
+            "clicks": "86",
+            "registrations": "10",
+            "first_deposits": "4"
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "10",
+            "first_deposits": "4"
+          }
+        },
+        {
+          "fixed_row": 27,
+          "project": "(Fine)Bdbajee-BD",
+          "code": "501",
+          "shooter": "",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 28,
+          "ads_project": "(Fine)Bdbajee-BD",
+          "ads_code": "501",
+          "ads_shooter": "Zinco",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "6",
+            "first_deposits": "0"
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "6",
+            "first_deposits": "0"
+          }
+        },
+        {
+          "fixed_row": 35,
+          "project": "(Fine)Bdbajee-BD",
+          "code": "5",
+          "shooter": "Kenny C",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 36,
+          "ads_project": "(Fine)Bdbajee-BD",
+          "ads_code": "5",
+          "ads_shooter": "Kenny C",
+          "metric_match": {
+            "spend": true,
+            "impressions": false,
+            "clicks": false,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "0",
+            "impressions": "29036",
+            "clicks": "462",
+            "registrations": "54",
+            "first_deposits": "15"
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "54",
+            "first_deposits": "15"
+          }
+        }
+      ],
+      "unmatched": [
+        {
+          "fixed_row": 419,
+          "project": "(Fine)Ggoopg-BR",
+          "code": "1",
+          "shooter": "Jason",
+          "match_strategy": null,
+          "ads_row": null,
+          "ads_project": "",
+          "ads_code": "",
+          "ads_shooter": "",
+          "metric_match": {},
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "",
+            "first_deposits": ""
+          },
+          "ads_metrics": {}
+        },
+        {
+          "fixed_row": 420,
+          "project": "(Fine)Ggoopg-BR",
+          "code": "1",
+          "shooter": "Luckyking",
+          "match_strategy": null,
+          "ads_row": null,
+          "ads_project": "",
+          "ads_code": "",
+          "ads_shooter": "",
+          "metric_match": {},
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "",
+            "first_deposits": ""
+          },
+          "ads_metrics": {}
+        },
+        {
+          "fixed_row": 421,
+          "project": "(Fine)Ggoopg-BR",
+          "code": "1",
+          "shooter": "Alan",
+          "match_strategy": null,
+          "ads_row": null,
+          "ads_project": "",
+          "ads_code": "",
+          "ads_shooter": "",
+          "metric_match": {},
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "",
+            "first_deposits": ""
+          },
+          "ads_metrics": {}
+        },
+        {
+          "fixed_row": 422,
+          "project": "(Fine)Ggoopg-BR",
+          "code": "1",
+          "shooter": "Anne",
+          "match_strategy": null,
+          "ads_row": null,
+          "ads_project": "",
+          "ads_code": "",
+          "ads_shooter": "",
+          "metric_match": {},
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "",
+            "first_deposits": ""
+          },
+          "ads_metrics": {}
+        }
+      ],
+      "metrics_not_close": [
+        {
+          "fixed_row": 2,
+          "project": "(Fine)Winbd-BD",
+          "code": "1501",
+          "shooter": "",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 2,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "1501",
+          "ads_shooter": "Fawn",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "0",
+            "first_deposits": "2"
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "0",
+            "first_deposits": "2"
+          }
+        },
+        {
+          "fixed_row": 3,
+          "project": "(Fine)Winbd-BD",
+          "code": "1502",
+          "shooter": "",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 3,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "1502",
+          "ads_shooter": "Beibei",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "0",
+            "first_deposits": "0"
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "0",
+            "first_deposits": "0"
+          }
+        },
+        {
+          "fixed_row": 6,
+          "project": "(Fine)Winbd-BD",
+          "code": "1505",
+          "shooter": "Sarah",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 6,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "1505",
+          "ads_shooter": "Sarah",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": false,
+            "first_deposits": false
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "",
+            "first_deposits": ""
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "163",
+            "first_deposits": "34"
+          }
+        },
+        {
+          "fixed_row": 8,
+          "project": "(Fine)Winbd-BD",
+          "code": "1507",
+          "shooter": "Sarah",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 8,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "1507",
+          "ads_shooter": "Sarah",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": false,
+            "first_deposits": false
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "",
+            "first_deposits": ""
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "0",
+            "first_deposits": "3"
+          }
+        },
+        {
+          "fixed_row": 9,
+          "project": "(Fine)Winbd-BD",
+          "code": "1508",
+          "shooter": "Sarah",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 9,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "1508",
+          "ads_shooter": "Sarah",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": false,
+            "first_deposits": false
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "",
+            "first_deposits": ""
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "59",
+            "first_deposits": "14"
+          }
+        },
+        {
+          "fixed_row": 11,
+          "project": "(Fine)Winbd-BD",
+          "code": "1510",
+          "shooter": "Sarah",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 11,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "1510",
+          "ads_shooter": "Sarah",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": false,
+            "first_deposits": false
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "",
+            "first_deposits": ""
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "144",
+            "first_deposits": "88"
+          }
+        },
+        {
+          "fixed_row": 16,
+          "project": "(Fine)Winbd-BD",
+          "code": "3302",
+          "shooter": "",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 16,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "3302",
+          "ads_shooter": "John",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "0",
+            "first_deposits": "0"
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "0",
+            "first_deposits": "0"
+          }
+        },
+        {
+          "fixed_row": 18,
+          "project": "(Fine)Winbd-BD",
+          "code": "3304",
+          "shooter": "",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 18,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "3304",
+          "ads_shooter": "Jerry",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "10",
+            "first_deposits": "4"
+          },
+          "ads_metrics": {
+            "spend": "79.48",
+            "impressions": "4806",
+            "clicks": "86",
+            "registrations": "10",
+            "first_deposits": "4"
+          }
+        },
+        {
+          "fixed_row": 20,
+          "project": "(Fine)Winbd-BD",
+          "code": "8",
+          "shooter": "Frank",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 20,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "8",
+          "ads_shooter": "Frank",
+          "metric_match": {
+            "spend": false,
+            "impressions": true,
+            "clicks": true,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "120.65",
+            "impressions": "1992",
+            "clicks": "28",
+            "registrations": "9",
+            "first_deposits": "9"
+          },
+          "ads_metrics": {
+            "spend": "113.65",
+            "impressions": "1992",
+            "clicks": "28",
+            "registrations": "9",
+            "first_deposits": "9"
+          }
+        },
+        {
+          "fixed_row": 23,
+          "project": "(Fine)Winbd-BD",
+          "code": "15",
+          "shooter": "Kenny C",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 23,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "15",
+          "ads_shooter": "Kenny C",
+          "metric_match": {
+            "spend": true,
+            "impressions": false,
+            "clicks": false,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "0",
+            "impressions": "198943",
+            "clicks": "3266",
+            "registrations": "381",
+            "first_deposits": "145"
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "381",
+            "first_deposits": "145"
+          }
+        },
+        {
+          "fixed_row": 24,
+          "project": "(Fine)Winbd-BD",
+          "code": "16",
+          "shooter": "Zoe",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 24,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "16",
+          "ads_shooter": "Zoe",
+          "metric_match": {
+            "spend": false,
+            "impressions": true,
+            "clicks": true,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "392.29",
+            "impressions": "20853",
+            "clicks": "521",
+            "registrations": "96",
+            "first_deposits": "25"
+          },
+          "ads_metrics": {
+            "spend": "387.3",
+            "impressions": "20853",
+            "clicks": "521",
+            "registrations": "96",
+            "first_deposits": "25"
+          }
+        },
+        {
+          "fixed_row": 26,
+          "project": "(Fine)Winbd-BD",
+          "code": "33",
+          "shooter": "Kenny C",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 26,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "33",
+          "ads_shooter": "Kenny C",
+          "metric_match": {
+            "spend": true,
+            "impressions": false,
+            "clicks": false,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "0",
+            "impressions": "4806",
+            "clicks": "86",
+            "registrations": "10",
+            "first_deposits": "4"
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "10",
+            "first_deposits": "4"
+          }
+        }
+      ]
+    }
+  },
+  {
+    "date": "0606",
+    "row_counts": {
+      "ads": 452,
+      "self": 456,
+      "fixed": 422,
+      "deleted_from_self": 55
+    },
+    "match_counts": {
+      "project+exact_code+country+kpi": 404,
+      "matched": 418,
+      "all_core_metrics_close": 297,
+      "project+shooter+country+kpi": 1,
+      "project+exact_code+country": 6,
+      "project+code+country+kpi": 5,
+      "project+code": 2,
+      "unmatched": 4
+    },
+    "duplicate_code_count": 58,
+    "duplicate_code_examples": [
+      {
+        "code": "1501",
+        "ads_rows": [
+          {
+            "row": 2,
+            "project": "(Fine)Winbd-BD",
+            "shooter": "Fawn",
+            "country": "孟加拉",
+            "kpi": "15"
+          },
+          {
+            "row": 134,
+            "project": "(Fine)KLwin-MY",
+            "shooter": "Chen",
+            "country": "马来西亚",
+            "kpi": "95"
+          }
+        ]
+      },
+      {
+        "code": "1502",
+        "ads_rows": [
+          {
+            "row": 3,
+            "project": "(Fine)Winbd-BD",
+            "shooter": "Beibei",
+            "country": "孟加拉",
+            "kpi": "15"
+          },
+          {
+            "row": 135,
+            "project": "(Fine)KLwin-MY",
+            "shooter": "Nicky",
+            "country": "马来西亚",
+            "kpi": "95"
+          }
+        ]
+      },
+      {
+        "code": "1503",
+        "ads_rows": [
+          {
+            "row": 4,
+            "project": "(Fine)Winbd-BD",
+            "shooter": "Chen",
+            "country": "孟加拉",
+            "kpi": "15"
+          },
+          {
+            "row": 136,
+            "project": "(Fine)KLwin-MY",
+            "shooter": "Fawn",
+            "country": "马来西亚",
+            "kpi": "95"
+          }
+        ]
+      },
+      {
+        "code": "8",
+        "ads_rows": [
+          {
+            "row": 20,
+            "project": "(Fine)Winbd-BD",
+            "shooter": "Frank",
+            "country": "孟加拉",
+            "kpi": "15"
+          },
+          {
+            "row": 116,
+            "project": "(Fine)Betrupees-PK",
+            "shooter": "Lane",
+            "country": "巴基斯坦",
+            "kpi": "17"
+          },
+          {
+            "row": 196,
+            "project": "(Fine)Winmyr-MY",
+            "shooter": "Phoebe",
+            "country": "马来西亚",
+            "kpi": "120"
+          },
+          {
+            "row": 245,
+            "project": "(Fine)Slotsmy-MY",
+            "shooter": "Wayne",
+            "country": "马来西亚",
+            "kpi": "120"
+          },
+          {
+            "row": 300,
+            "project": "(Fine)Vipganer-MX",
+            "shooter": "Phoebe",
+            "country": "墨西哥",
+            "kpi": "22"
+          }
+        ]
+      },
+      {
+        "code": "10",
+        "ads_rows": [
+          {
+            "row": 21,
+            "project": "(Fine)Winbd-BD",
+            "shooter": "Cindy",
+            "country": "孟加拉",
+            "kpi": "15"
+          },
+          {
+            "row": 128,
+            "project": "(Fine)Winrm-MY",
+            "shooter": "Quest",
+            "country": "马来西亚",
+            "kpi": "95"
+          },
+          {
+            "row": 253,
+            "project": "(Fine)Slots-PK",
+            "shooter": "Cindy",
+            "country": "巴基斯坦",
+            "kpi": "17"
+          }
+        ]
+      },
+      {
+        "code": "14",
+        "ads_rows": [
+          {
+            "row": 22,
+            "project": "(Fine)Winbd-BD",
+            "shooter": "Cindy",
+            "country": "孟加拉",
+            "kpi": "15"
+          },
+          {
+            "row": 129,
+            "project": "(Fine)Winrm-MY",
+            "shooter": "Quest",
+            "country": "马来西亚",
+            "kpi": "95"
+          },
+          {
+            "row": 145,
+            "project": "(Fine)KLwin-MY",
+            "shooter": "Phoebe",
+            "country": "马来西亚",
+            "kpi": "95"
+          },
+          {
+            "row": 217,
+            "project": "(Fine)Winpkr-PK",
+            "shooter": "Kenny C",
+            "country": "巴基斯坦",
+            "kpi": "19"
+          }
+        ]
+      },
+      {
+        "code": "15",
+        "ads_rows": [
+          {
+            "row": 23,
+            "project": "(Fine)Winbd-BD",
+            "shooter": "Kenny C",
+            "country": "孟加拉",
+            "kpi": "15"
+          },
+          {
+            "row": 130,
+            "project": "(Fine)Winrm-MY",
+            "shooter": "Zoe",
+            "country": "马来西亚",
+            "kpi": "95"
+          },
+          {
+            "row": 146,
+            "project": "(Fine)KLwin-MY",
+            "shooter": "Kenny C",
+            "country": "马来西亚",
+            "kpi": "95"
+          }
+        ]
+      },
+      {
+        "code": "16",
+        "ads_rows": [
+          {
+            "row": 24,
+            "project": "(Fine)Winbd-BD",
+            "shooter": "Zoe",
+            "country": "孟加拉",
+            "kpi": "15"
+          },
+          {
+            "row": 131,
+            "project": "(Fine)Winrm-MY",
+            "shooter": "Zoe",
+            "country": "马来西亚",
+            "kpi": "95"
+          }
+        ]
+      }
+    ],
+    "deleted_examples": [
+      {
+        "row": 27,
+        "project": "01(Fine)Winbd-BD",
+        "code": "",
+        "shooter": "",
+        "metrics_nonblank": 0
+      },
+      {
+        "row": 38,
+        "project": "02(Fine)Bdbajee-BD",
+        "code": "",
+        "shooter": "",
+        "metrics_nonblank": 0
+      },
+      {
+        "row": 44,
+        "project": "03(Fine)Tbajee-BD",
+        "code": "",
+        "shooter": "",
+        "metrics_nonblank": 0
+      },
+      {
+        "row": 56,
+        "project": "05(Fine)Xbajee-BD",
+        "code": "",
+        "shooter": "",
+        "metrics_nonblank": 0
+      },
+      {
+        "row": 79,
+        "project": "07(Fine)Rbajee-BD",
+        "code": "",
+        "shooter": "",
+        "metrics_nonblank": 0
+      },
+      {
+        "row": 103,
+        "project": "08(Fine)Cbaji-BD",
+        "code": "",
+        "shooter": "",
+        "metrics_nonblank": 0
+      },
+      {
+        "row": 115,
+        "project": "09(Fine)Betrupees-PK",
+        "code": "",
+        "shooter": "",
+        "metrics_nonblank": 0
+      },
+      {
+        "row": 129,
+        "project": "10(Fine)Winrm-MY",
+        "code": "",
+        "shooter": "",
+        "metrics_nonblank": 0
+      },
+      {
+        "row": 145,
+        "project": "11(Fine)KLwin-MY",
+        "code": "",
+        "shooter": "",
+        "metrics_nonblank": 0
+      },
+      {
+        "row": 198,
+        "project": "14(Fine)Winpkr-PK",
+        "code": "tech01",
+        "shooter": "Wayne",
+        "metrics_nonblank": 5
+      },
+      {
+        "row": 199,
+        "project": "14(Fine)Winpkr-PK",
+        "code": "tech02",
+        "shooter": "Wendy",
+        "metrics_nonblank": 5
+      },
+      {
+        "row": 200,
+        "project": "14(Fine)Winpkr-PK",
+        "code": "tech03",
+        "shooter": "Yunyun",
+        "metrics_nonblank": 5
+      },
+      {
+        "row": 201,
+        "project": "14(Fine)Winpkr-PK",
+        "code": "tech04",
+        "shooter": "Mark",
+        "metrics_nonblank": 5
+      },
+      {
+        "row": 208,
+        "project": "14(Fine)Winpkr-PK",
+        "code": "",
+        "shooter": "",
+        "metrics_nonblank": 0
+      },
+      {
+        "row": 221,
+        "project": "16(Fine)Betpkr-PK",
+        "code": "",
+        "shooter": "",
+        "metrics_nonblank": 0
+      },
+      {
+        "row": 234,
+        "project": "19(Fine)Slotsmy-MY",
+        "code": "",
+        "shooter": "",
+        "metrics_nonblank": 0
+      },
+      {
+        "row": 242,
+        "project": "20(Fine)Slots-PK",
+        "code": "",
+        "shooter": "",
+        "metrics_nonblank": 0
+      },
+      {
+        "row": 271,
+        "project": "25(Fine)Winnpr-NP",
+        "code": "",
+        "shooter": "",
+        "metrics_nonblank": 0
+      },
+      {
+        "row": 292,
+        "project": "26(Fine)Vipganer-MX",
+        "code": "",
+        "shooter": "",
+        "metrics_nonblank": 0
+      },
+      {
+        "row": 347,
+        "project": "44(Tim)Betlah-MY",
+        "code": "",
+        "shooter": "",
+        "metrics_nonblank": 0
+      }
+    ],
+    "examples": {
+      "needs_project_prefix_strip": [],
+      "needs_code_prefix_strip": [
+        {
+          "fixed_row": 395,
+          "project": "(SLS)A26-PK",
+          "code": "1",
+          "shooter": "Mark",
+          "match_strategy": "project+code+country+kpi",
+          "ads_row": 423,
+          "ads_project": "(SLS)A26-PK",
+          "ads_code": "code01",
+          "ads_shooter": "Mark",
+          "metric_match": {
+            "spend": true,
+            "impressions": true,
+            "clicks": true,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "0",
+            "first_deposits": "0"
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "0",
+            "first_deposits": "0"
+          }
+        },
+        {
+          "fixed_row": 396,
+          "project": "(SLS)A26-PK",
+          "code": "2",
+          "shooter": "Wendy",
+          "match_strategy": "project+code+country+kpi",
+          "ads_row": 424,
+          "ads_project": "(SLS)A26-PK",
+          "ads_code": "code02",
+          "ads_shooter": "Wendy",
+          "metric_match": {
+            "spend": true,
+            "impressions": true,
+            "clicks": true,
+            "registrations": true,
+            "first_deposits": false
+          },
+          "fixed_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "0",
+            "first_deposits": "1"
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "0",
+            "first_deposits": "0"
+          }
+        },
+        {
+          "fixed_row": 397,
+          "project": "(SLS)A26-PK",
+          "code": "3",
+          "shooter": "Anne",
+          "match_strategy": "project+code+country+kpi",
+          "ads_row": 425,
+          "ads_project": "(SLS)A26-PK",
+          "ads_code": "code03",
+          "ads_shooter": "Anne",
+          "metric_match": {
+            "spend": true,
+            "impressions": true,
+            "clicks": true,
+            "registrations": false,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "43.07",
+            "impressions": "3273",
+            "clicks": "105",
+            "registrations": "3",
+            "first_deposits": "0"
+          },
+          "ads_metrics": {
+            "spend": "42.9",
+            "impressions": "3273",
+            "clicks": "105",
+            "registrations": "0",
+            "first_deposits": "0"
+          }
+        },
+        {
+          "fixed_row": 398,
+          "project": "(SLS)A26-PK",
+          "code": "4",
+          "shooter": "Alan",
+          "match_strategy": "project+code+country+kpi",
+          "ads_row": 426,
+          "ads_project": "(SLS)A26-PK",
+          "ads_code": "code04",
+          "ads_shooter": "Alan",
+          "metric_match": {
+            "spend": true,
+            "impressions": true,
+            "clicks": true,
+            "registrations": false,
+            "first_deposits": false
+          },
+          "fixed_metrics": {
+            "spend": "12.18",
+            "impressions": "4139",
+            "clicks": "341",
+            "registrations": "1",
+            "first_deposits": "1"
+          },
+          "ads_metrics": {
+            "spend": "12.14",
+            "impressions": "4139",
+            "clicks": "341",
+            "registrations": "0",
+            "first_deposits": "0"
+          }
+        },
+        {
+          "fixed_row": 399,
+          "project": "(SLS)A26-PK",
+          "code": "5",
+          "shooter": "Imad",
+          "match_strategy": "project+code+country+kpi",
+          "ads_row": 427,
+          "ads_project": "(SLS)A26-PK",
+          "ads_code": "code05",
+          "ads_shooter": "Imad",
+          "metric_match": {
+            "spend": true,
+            "impressions": true,
+            "clicks": true,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "0",
+            "first_deposits": "0"
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "0",
+            "first_deposits": "0"
+          }
+        }
+      ],
+      "shooter_ignored_or_changed": [
+        {
+          "fixed_row": 2,
+          "project": "(Fine)Winbd-BD",
+          "code": "1501",
+          "shooter": "",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 2,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "1501",
+          "ads_shooter": "Fawn",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "0",
+            "first_deposits": "1"
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "0",
+            "first_deposits": "1"
+          }
+        },
+        {
+          "fixed_row": 3,
+          "project": "(Fine)Winbd-BD",
+          "code": "1502",
+          "shooter": "",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 3,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "1502",
+          "ads_shooter": "Beibei",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "0",
+            "first_deposits": "0"
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "0",
+            "first_deposits": "0"
+          }
+        },
+        {
+          "fixed_row": 12,
+          "project": "(Fine)Winbd-BD",
+          "code": "1511",
+          "shooter": "Sarah",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 12,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "1511",
+          "ads_shooter": "Phoebe",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": false,
+            "first_deposits": false
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "",
+            "first_deposits": ""
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "0",
+            "first_deposits": "0"
+          }
+        },
+        {
+          "fixed_row": 13,
+          "project": "(Fine)Winbd-BD",
+          "code": "1512",
+          "shooter": "Sarah",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 13,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "1512",
+          "ads_shooter": "Phoebe",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": false,
+            "first_deposits": false
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "",
+            "first_deposits": ""
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "0",
+            "first_deposits": "0"
+          }
+        },
+        {
+          "fixed_row": 14,
+          "project": "(Fine)Winbd-BD",
+          "code": "1513",
+          "shooter": "Sarah",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 14,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "1513",
+          "ads_shooter": "Phoebe",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": false,
+            "first_deposits": false
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "",
+            "first_deposits": ""
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "0",
+            "first_deposits": "0"
+          }
+        },
+        {
+          "fixed_row": 16,
+          "project": "(Fine)Winbd-BD",
+          "code": "3302",
+          "shooter": "",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 16,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "3302",
+          "ads_shooter": "John",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "0",
+            "first_deposits": "0"
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "0",
+            "first_deposits": "0"
+          }
+        },
+        {
+          "fixed_row": 18,
+          "project": "(Fine)Winbd-BD",
+          "code": "3304",
+          "shooter": "",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 18,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "3304",
+          "ads_shooter": "Jerry",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "1",
+            "first_deposits": "0"
+          },
+          "ads_metrics": {
+            "spend": "60.6",
+            "impressions": "3218",
+            "clicks": "46",
+            "registrations": "1",
+            "first_deposits": "0"
+          }
+        },
+        {
+          "fixed_row": 27,
+          "project": "(Fine)Bdbajee-BD",
+          "code": "501",
+          "shooter": "",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 28,
+          "ads_project": "(Fine)Bdbajee-BD",
+          "ads_code": "501",
+          "ads_shooter": "Zinco",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "4",
+            "first_deposits": "0"
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "4",
+            "first_deposits": "0"
+          }
+        },
+        {
+          "fixed_row": 28,
+          "project": "(Fine)Bdbajee-BD",
+          "code": "502",
+          "shooter": "",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 29,
+          "ads_project": "(Fine)Bdbajee-BD",
+          "ads_code": "502",
+          "ads_shooter": "Melissa",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "4",
+            "first_deposits": "1"
+          },
+          "ads_metrics": {
+            "spend": "47.4",
+            "impressions": "14050",
+            "clicks": "345",
+            "registrations": "4",
+            "first_deposits": "1"
+          }
+        },
+        {
+          "fixed_row": 29,
+          "project": "(Fine)Bdbajee-BD",
+          "code": "503",
+          "shooter": "Phoebe",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 30,
+          "ads_project": "(Fine)Bdbajee-BD",
+          "ads_code": "503",
+          "ads_shooter": "Alan",
+          "metric_match": {
+            "spend": true,
+            "impressions": true,
+            "clicks": true,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "0",
+            "first_deposits": "0"
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "0",
+            "first_deposits": "0"
+          }
+        },
+        {
+          "fixed_row": 30,
+          "project": "(Fine)Bdbajee-BD",
+          "code": "504",
+          "shooter": "",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 31,
+          "ads_project": "(Fine)Bdbajee-BD",
+          "ads_code": "504",
+          "ads_shooter": "Jake",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "41",
+            "first_deposits": "13"
+          },
+          "ads_metrics": {
+            "spend": "238.45",
+            "impressions": "45622",
+            "clicks": "756",
+            "registrations": "41",
+            "first_deposits": "13"
+          }
+        },
+        {
+          "fixed_row": 69,
+          "project": "(Fine)Fbajee-BD",
+          "code": "vip133",
+          "shooter": "",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 73,
+          "ads_project": "(Fine)Fbajee-BD",
+          "ads_code": "vip133",
+          "ads_shooter": "CY",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "21",
+            "first_deposits": "5"
+          },
+          "ads_metrics": {
+            "spend": "75.66",
+            "impressions": "4232",
+            "clicks": "160",
+            "registrations": "21",
+            "first_deposits": "5"
+          }
+        }
+      ],
+      "zero_spend_but_reg_or_ftd_kept": [
+        {
+          "fixed_row": 2,
+          "project": "(Fine)Winbd-BD",
+          "code": "1501",
+          "shooter": "",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 2,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "1501",
+          "ads_shooter": "Fawn",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "0",
+            "first_deposits": "1"
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "0",
+            "first_deposits": "1"
+          }
+        },
+        {
+          "fixed_row": 6,
+          "project": "(Fine)Winbd-BD",
+          "code": "1505",
+          "shooter": "Sarah",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 6,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "1505",
+          "ads_shooter": "Sarah",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": false,
+            "first_deposits": false
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "",
+            "first_deposits": ""
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "27",
+            "first_deposits": "20"
+          }
+        },
+        {
+          "fixed_row": 8,
+          "project": "(Fine)Winbd-BD",
+          "code": "1507",
+          "shooter": "Sarah",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 8,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "1507",
+          "ads_shooter": "Sarah",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": false,
+            "first_deposits": false
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "",
+            "first_deposits": ""
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "11",
+            "first_deposits": "4"
+          }
+        },
+        {
+          "fixed_row": 9,
+          "project": "(Fine)Winbd-BD",
+          "code": "1508",
+          "shooter": "Sarah",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 9,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "1508",
+          "ads_shooter": "Sarah",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": false,
+            "first_deposits": false
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "",
+            "first_deposits": ""
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "13",
+            "first_deposits": "7"
+          }
+        },
+        {
+          "fixed_row": 11,
+          "project": "(Fine)Winbd-BD",
+          "code": "1510",
+          "shooter": "Sarah",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 11,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "1510",
+          "ads_shooter": "Sarah",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": false,
+            "first_deposits": false
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "",
+            "first_deposits": ""
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "567",
+            "first_deposits": "224"
+          }
+        },
+        {
+          "fixed_row": 21,
+          "project": "(Fine)Winbd-BD",
+          "code": "10",
+          "shooter": "Cindy",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 21,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "10",
+          "ads_shooter": "Cindy",
+          "metric_match": {
+            "spend": true,
+            "impressions": true,
+            "clicks": true,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "2",
+            "first_deposits": "2"
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "2",
+            "first_deposits": "2"
+          }
+        },
+        {
+          "fixed_row": 22,
+          "project": "(Fine)Winbd-BD",
+          "code": "14",
+          "shooter": "Cindy",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 22,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "14",
+          "ads_shooter": "Cindy",
+          "metric_match": {
+            "spend": true,
+            "impressions": true,
+            "clicks": true,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "1",
+            "first_deposits": "1"
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "1",
+            "first_deposits": "1"
+          }
+        },
+        {
+          "fixed_row": 23,
+          "project": "(Fine)Winbd-BD",
+          "code": "15",
+          "shooter": "Kenny C",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 23,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "15",
+          "ads_shooter": "Kenny C",
+          "metric_match": {
+            "spend": true,
+            "impressions": false,
+            "clicks": false,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "0",
+            "impressions": "426658",
+            "clicks": "6052",
+            "registrations": "633",
+            "first_deposits": "260"
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "633",
+            "first_deposits": "260"
+          }
+        },
+        {
+          "fixed_row": 25,
+          "project": "(Fine)Winbd-BD",
+          "code": "19",
+          "shooter": "Imad",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 25,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "19",
+          "ads_shooter": "Imad",
+          "metric_match": {
+            "spend": true,
+            "impressions": true,
+            "clicks": true,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "6",
+            "first_deposits": "1"
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "6",
+            "first_deposits": "1"
+          }
+        },
+        {
+          "fixed_row": 26,
+          "project": "(Fine)Winbd-BD",
+          "code": "33",
+          "shooter": "Kenny C",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 26,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "33",
+          "ads_shooter": "Kenny C",
+          "metric_match": {
+            "spend": true,
+            "impressions": false,
+            "clicks": false,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "0",
+            "impressions": "3218",
+            "clicks": "46",
+            "registrations": "1",
+            "first_deposits": "0"
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "1",
+            "first_deposits": "0"
+          }
+        },
+        {
+          "fixed_row": 27,
+          "project": "(Fine)Bdbajee-BD",
+          "code": "501",
+          "shooter": "",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 28,
+          "ads_project": "(Fine)Bdbajee-BD",
+          "ads_code": "501",
+          "ads_shooter": "Zinco",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "4",
+            "first_deposits": "0"
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "4",
+            "first_deposits": "0"
+          }
+        },
+        {
+          "fixed_row": 35,
+          "project": "(Fine)Bdbajee-BD",
+          "code": "5",
+          "shooter": "Kenny C",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 36,
+          "ads_project": "(Fine)Bdbajee-BD",
+          "ads_code": "5",
+          "ads_shooter": "Kenny C",
+          "metric_match": {
+            "spend": true,
+            "impressions": false,
+            "clicks": false,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "0",
+            "impressions": "62329",
+            "clicks": "1189",
+            "registrations": "72",
+            "first_deposits": "22"
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "72",
+            "first_deposits": "22"
+          }
+        }
+      ],
+      "unmatched": [
+        {
+          "fixed_row": 420,
+          "project": "(Fine)Ggoopg-BR",
+          "code": "1",
+          "shooter": "Jason",
+          "match_strategy": null,
+          "ads_row": null,
+          "ads_project": "",
+          "ads_code": "",
+          "ads_shooter": "",
+          "metric_match": {},
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "",
+            "first_deposits": ""
+          },
+          "ads_metrics": {}
+        },
+        {
+          "fixed_row": 421,
+          "project": "(Fine)Ggoopg-BR",
+          "code": "1",
+          "shooter": "Luckyking",
+          "match_strategy": null,
+          "ads_row": null,
+          "ads_project": "",
+          "ads_code": "",
+          "ads_shooter": "",
+          "metric_match": {},
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "",
+            "first_deposits": ""
+          },
+          "ads_metrics": {}
+        },
+        {
+          "fixed_row": 422,
+          "project": "(Fine)Ggoopg-BR",
+          "code": "1",
+          "shooter": "Alan",
+          "match_strategy": null,
+          "ads_row": null,
+          "ads_project": "",
+          "ads_code": "",
+          "ads_shooter": "",
+          "metric_match": {},
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "",
+            "first_deposits": ""
+          },
+          "ads_metrics": {}
+        },
+        {
+          "fixed_row": 423,
+          "project": "(Fine)Ggoopg-BR",
+          "code": "1",
+          "shooter": "Anne",
+          "match_strategy": null,
+          "ads_row": null,
+          "ads_project": "",
+          "ads_code": "",
+          "ads_shooter": "",
+          "metric_match": {},
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "",
+            "first_deposits": ""
+          },
+          "ads_metrics": {}
+        }
+      ],
+      "metrics_not_close": [
+        {
+          "fixed_row": 2,
+          "project": "(Fine)Winbd-BD",
+          "code": "1501",
+          "shooter": "",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 2,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "1501",
+          "ads_shooter": "Fawn",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "0",
+            "first_deposits": "1"
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "0",
+            "first_deposits": "1"
+          }
+        },
+        {
+          "fixed_row": 3,
+          "project": "(Fine)Winbd-BD",
+          "code": "1502",
+          "shooter": "",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 3,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "1502",
+          "ads_shooter": "Beibei",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "0",
+            "first_deposits": "0"
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "0",
+            "first_deposits": "0"
+          }
+        },
+        {
+          "fixed_row": 6,
+          "project": "(Fine)Winbd-BD",
+          "code": "1505",
+          "shooter": "Sarah",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 6,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "1505",
+          "ads_shooter": "Sarah",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": false,
+            "first_deposits": false
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "",
+            "first_deposits": ""
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "27",
+            "first_deposits": "20"
+          }
+        },
+        {
+          "fixed_row": 8,
+          "project": "(Fine)Winbd-BD",
+          "code": "1507",
+          "shooter": "Sarah",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 8,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "1507",
+          "ads_shooter": "Sarah",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": false,
+            "first_deposits": false
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "",
+            "first_deposits": ""
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "11",
+            "first_deposits": "4"
+          }
+        },
+        {
+          "fixed_row": 9,
+          "project": "(Fine)Winbd-BD",
+          "code": "1508",
+          "shooter": "Sarah",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 9,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "1508",
+          "ads_shooter": "Sarah",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": false,
+            "first_deposits": false
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "",
+            "first_deposits": ""
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "13",
+            "first_deposits": "7"
+          }
+        },
+        {
+          "fixed_row": 11,
+          "project": "(Fine)Winbd-BD",
+          "code": "1510",
+          "shooter": "Sarah",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 11,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "1510",
+          "ads_shooter": "Sarah",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": false,
+            "first_deposits": false
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "",
+            "first_deposits": ""
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "567",
+            "first_deposits": "224"
+          }
+        },
+        {
+          "fixed_row": 12,
+          "project": "(Fine)Winbd-BD",
+          "code": "1511",
+          "shooter": "Sarah",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 12,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "1511",
+          "ads_shooter": "Phoebe",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": false,
+            "first_deposits": false
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "",
+            "first_deposits": ""
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "0",
+            "first_deposits": "0"
+          }
+        },
+        {
+          "fixed_row": 13,
+          "project": "(Fine)Winbd-BD",
+          "code": "1512",
+          "shooter": "Sarah",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 13,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "1512",
+          "ads_shooter": "Phoebe",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": false,
+            "first_deposits": false
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "",
+            "first_deposits": ""
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "0",
+            "first_deposits": "0"
+          }
+        },
+        {
+          "fixed_row": 14,
+          "project": "(Fine)Winbd-BD",
+          "code": "1513",
+          "shooter": "Sarah",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 14,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "1513",
+          "ads_shooter": "Phoebe",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": false,
+            "first_deposits": false
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "",
+            "first_deposits": ""
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "0",
+            "first_deposits": "0"
+          }
+        },
+        {
+          "fixed_row": 16,
+          "project": "(Fine)Winbd-BD",
+          "code": "3302",
+          "shooter": "",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 16,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "3302",
+          "ads_shooter": "John",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "0",
+            "first_deposits": "0"
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "0",
+            "first_deposits": "0"
+          }
+        },
+        {
+          "fixed_row": 18,
+          "project": "(Fine)Winbd-BD",
+          "code": "3304",
+          "shooter": "",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 18,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "3304",
+          "ads_shooter": "Jerry",
+          "metric_match": {
+            "spend": false,
+            "impressions": false,
+            "clicks": false,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "",
+            "impressions": "",
+            "clicks": "",
+            "registrations": "1",
+            "first_deposits": "0"
+          },
+          "ads_metrics": {
+            "spend": "60.6",
+            "impressions": "3218",
+            "clicks": "46",
+            "registrations": "1",
+            "first_deposits": "0"
+          }
+        },
+        {
+          "fixed_row": 23,
+          "project": "(Fine)Winbd-BD",
+          "code": "15",
+          "shooter": "Kenny C",
+          "match_strategy": "project+exact_code+country+kpi",
+          "ads_row": 23,
+          "ads_project": "(Fine)Winbd-BD",
+          "ads_code": "15",
+          "ads_shooter": "Kenny C",
+          "metric_match": {
+            "spend": true,
+            "impressions": false,
+            "clicks": false,
+            "registrations": true,
+            "first_deposits": true
+          },
+          "fixed_metrics": {
+            "spend": "0",
+            "impressions": "426658",
+            "clicks": "6052",
+            "registrations": "633",
+            "first_deposits": "260"
+          },
+          "ads_metrics": {
+            "spend": "0",
+            "impressions": "0",
+            "clicks": "0",
+            "registrations": "633",
+            "first_deposits": "260"
+          }
+        }
+      ]
+    }
+  }
+]

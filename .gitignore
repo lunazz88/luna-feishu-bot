@@ -1,0 +1,6 @@
+.env
+node_modules/
+.venv/
+outputs/
+.DS_Store
+npm-debug.log*

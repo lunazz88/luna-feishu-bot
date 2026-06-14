@@ -1,0 +1,17 @@
+{
+  "name": "luna-feishu-bot-mac",
+  "version": "1.0.0",
+  "private": true,
+  "type": "commonjs",
+  "scripts": {
+    "start": "node src/botWsClient.js",
+    "check": "node --check src/botWsClient.js && node --check src/processIncomingRawFile.js && node --check src/feishuClient.js",
+    "test:config": "node -e \"const { assertConfig, config } = require('./src/config'); assertConfig(); console.log({ baseUrl: config.baseUrl, tenantDomain: config.tenantDomain, hasAppId: Boolean(config.appId), hasSecret: Boolean(config.appSecret) });\""
+  },
+  "dependencies": {
+    "@larksuiteoapi/node-sdk": "^1.66.1",
+    "axios": "^1.17.0",
+    "dotenv": "^17.4.2",
+    "form-data": "^4.0.4"
+  }
+}
