@@ -1,21 +1,21 @@
-# Lark 数据修正机器人 Mac 迁移说明
+# Luna Feishu Bot Mac 使用说明
 
-这个包用于把当前 Windows 上的 Lark 数据修正机器人迁移到 Mac。
+这个项目用于在 Mac 上运行 Luna 飞书/Lark 数据修正机器人。
 
 共享项目只包含 `.env.example` 配置模板。本地运行前需要复制生成 `.env` 并填写配置。
 
 ## 1. 解压
 
-把整个 `luna-feishu-bot-mac` 文件夹放到 Mac 上，例如：
+把整个 `luna-feishu-bot` 文件夹放到 Mac 上，例如：
 
 ```bash
-~/luna-feishu-bot-mac
+~/luna-feishu-bot
 ```
 
 进入目录：
 
 ```bash
-cd ~/luna-feishu-bot-mac
+cd ~/luna-feishu-bot
 ```
 
 ## 2. 安装依赖
