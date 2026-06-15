@@ -1,131 +1,127 @@
 # Luna Feishu Bot Mac 使用说明
 
-这个项目用于在 Mac 上运行 Luna 飞书/Lark 数据修正机器人。
+这个项目用于在 Mac 上运行 Luna 飞书/Lark 两机器人流程。共享仓库只包含配置模板，本地运行前需要创建并填写：
 
-共享项目只包含 `.env.example` 配置模板。本地运行前需要复制生成 `.env` 并填写配置。
+- `.env.robot1`：robot1，处理原始广告文件。
+- `.env.robot2`：robot2，接收“更新几月几号数据”命令。
 
-## 1. 解压
+## 1. 安装
 
-把整个 `luna-feishu-bot` 文件夹放到 Mac 上，例如：
-
-```bash
-~/luna-feishu-bot
-```
-
-进入目录：
+把项目下载到 Mac，例如：
 
 ```bash
-cd ~/luna-feishu-bot
+git clone git@github.com:lunazz88/luna-feishu-bot.git
+cd luna-feishu-bot
+cp .env.robot1.example .env.robot1
+cp .env.robot2.example .env.robot2
+chmod +x install_mac.sh
+./install_mac.sh
 ```
 
-## 2. 安装依赖
-
-Mac 需要先有 Node.js 和 Python 3。推荐用 Homebrew：
+如果 Mac 没有 Node.js / Python，可以先安装：
 
 ```bash
 brew install node python
 ```
 
-然后运行：
+## 2. 启动
+
+同时启动 robot1 和 robot2：
 
 ```bash
-chmod +x install_mac.sh start_bot.sh stop_bot.sh
-./install_mac.sh
+./start_all_mac.sh
 ```
 
-安装脚本会做这些事：
-
-- 安装 Node 依赖
-- 创建 Python 虚拟环境 `.venv`
-- 安装 `openpyxl`
-- 检查机器人配置
-
-## 3. 启动机器人
+单独启动：
 
 ```bash
-./start_bot.sh
+./start_robot1_mac.sh
+./start_robot2_mac.sh
+```
+
+停止：
+
+```bash
+./stop_bots_mac.sh
 ```
 
 查看日志：
 
 ```bash
-tail -f outputs/bot.out.log
-tail -f outputs/bot.err.log
+tail -f outputs/robot1.out.log outputs/robot1.err.log
+tail -f outputs/robot2.out.log outputs/robot2.err.log
 ```
 
-停止机器人：
+## 3. 当前流程
 
-```bash
-./stop_bot.sh
-```
+robot1：
 
-## 4. 飞书/Lark 后台保持一致
-
-这个机器人使用长连接接收事件。Mac 上启动后，不需要配置公网地址。
-
-应用后台需要保持：
-
-- 机器人能力已启用
-- 事件订阅使用长连接
-- 已订阅 `im.message.receive_v1`
-- 机器人已被拉进接收原始广告文件的群
-- 权限已包含消息、文件下载、云文档、多维表格读写、复制云文档、管理文档权限
-
-## 5. 当前业务配置
-
-`.env.example` 里包含当前运行所需的配置字段模板。`.env` 仅保存在本机，不随项目共享。
-
-如果正式企业换应用，需要修改：
-
-- `FEISHU_APP_ID`
-- `FEISHU_APP_SECRET`
-- `FEISHU_TENANT_DOMAIN`
-- `FEISHU_RESULT_CHAT_ID`
-- `FEISHU_SHOOTER_BASE_URL`
-- `FEISHU_AI_CORRECTION_BASE_URL`
-- `FEISHU_SHOOTER_MISMATCH_BASE_URL`
-- `FEISHU_CRAWL_FAILURE_BASE_URL`
-- `FEISHU_UNMATCHED_BASE_URL`
-
-## 6. 当前处理逻辑
-
-收到 `crawler广告数据报告_YYYY-MM-DD.xlsx` 后：
-
-1. 下载原始广告 Excel 到 `outputs/incoming/日期/`
-2. 根据文件名识别日期
-3. 在投手多维表格中找到当天投手数据表
-4. 按优先级分类：
-   - 抓取失败/无数据
-   - AI 修正
+1. 群里收到 `crawler广告数据报告_YYYY-MM-DD.xlsx`。
+2. 下载原始广告 Excel。
+3. 找投手固定表里的当天投手数据表页。
+4. 在四个固定大表格下面生成当天表页：
+   - ai修正表人工未确认
+   - 抓取失败
    - 投手不一致
    - 未匹配
-5. 每个结果都复制当天投手多维表格作为底板
-6. 在复制件中只保留对应分类记录
-7. 写入广告原始数据指标
-8. 将结果链接和数量发送到 `FEISHU_RESULT_CHAT_ID` 对应群
 
-复制投手表作为底板的原因：这样可以保留投手表已有字段、公式、视图和分组。
+robot2：
 
-## 7. 常见问题
+1. 群里收到 `更新六月八号数据` 这类文字。
+2. 去四个固定大表格下面找当天表页。
+3. 合并写入 `ai修正表（人工确认）` 下面的新表页，例如 `六月八号最终修正表`。
 
-### Bitable is copying
+robot2 收消息用 `.env.robot2`，写文档时通过 `FEISHU_DOC_ENV_PATH=.env.robot1` 使用 robot1 的文档权限。
 
-飞书复制多维表格后会有后台处理时间。代码已经自动等待重试，如果持续失败，一般是飞书后台复制慢或权限异常。
+## 4. Lark 后台要求
 
-### 收不到消息
+两个应用都要启用机器人能力和长连接事件。
 
-确认：
+robot1 至少需要：
 
-- Mac 上 `./start_bot.sh` 已启动
-- `outputs/bot.out.log` 里出现 `ws client ready`
-- 飞书后台事件订阅是长连接
-- 机器人在目标群里
-- 应用权限已发布/生效
+- 接收消息
+- 发送消息
+- 下载消息文件
+- 读取云文档
+- 读取/写入多维表格
+- 复制/管理云文档权限
 
-### 能收到消息但无法下载文件
+robot2 至少需要：
 
-确认应用有消息资源/文件下载相关权限，并且机器人在发送文件的群里。
+- 接收消息
+- 发送消息
 
-### 读取不到投手表
+文档写入现在使用 robot1 凭证，因此 robot2 不需要被添加到所有多维表格文档里。
 
-确认 `.env` 中 `FEISHU_SHOOTER_BASE_URL` 是正确的多维表格链接，且应用对该文档有读取/写入/复制权限。
+## 5. 重要链接配置
+
+固定表链接在代码默认值和 env 中已经配置。若迁移到正式企业，需要改：
+
+- `.env.robot1`
+- `.env.robot2`
+
+重点变量：
+
+```env
+FEISHU_SHOOTER_BASE_URL=
+FEISHU_AI_CORRECTION_BASE_URL=
+FEISHU_AI_CONFIRMED_BASE_URL=
+FEISHU_SHOOTER_MISMATCH_BASE_URL=
+FEISHU_CRAWL_FAILURE_BASE_URL=
+FEISHU_UNMATCHED_BASE_URL=
+FEISHU_RESULT_CHAT_ID=
+```
+
+## 6. 测试命令
+
+检查语法：
+
+```bash
+npm run check
+```
+
+测试 robot2 日期解析：
+
+```bash
+FEISHU_AUTOMATION_DIR="$PWD" FEISHU_ENV_PATH="$PWD/.env.robot2" FEISHU_DOC_ENV_PATH="$PWD/.env.robot1" node -e "const f=require('./src/finalizeDailyCorrection'); console.log(f.parseBusinessDate('更新六月八号数据'))"
+```

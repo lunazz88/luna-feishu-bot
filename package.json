@@ -2,17 +2,16 @@
   "name": "luna-feishu-bot",
   "version": "1.0.0",
   "private": true,
-  "description": "Luna Feishu/Lark bot for daily ad report processing.",
-  "type": "commonjs",
+  "description": "Luna Feishu/Lark robot1 and robot2 automation for ad data correction.",
   "scripts": {
-    "start": "node src/botWsClient.js",
-    "check": "node --check src/botWsClient.js && node --check src/processIncomingRawFile.js && node --check src/feishuClient.js",
-    "test:config": "node -e \"const { assertConfig, config } = require('./src/config'); assertConfig(); console.log({ baseUrl: config.baseUrl, tenantDomain: config.tenantDomain, hasAppId: Boolean(config.appId), hasSecret: Boolean(config.appSecret) });\""
+    "start:robot1": "node src/botWsClient.js",
+    "start:robot2": "node src/finalBotWsClient.js",
+    "check": "node -c src/botWsClient.js && node -c src/finalBotWsClient.js && node -c src/processIncomingRawFile.js && node -c src/finalizeDailyCorrection.js"
   },
   "dependencies": {
-    "@larksuiteoapi/node-sdk": "^1.66.1",
-    "axios": "^1.17.0",
-    "dotenv": "^17.4.2",
-    "form-data": "^4.0.4"
+    "@larksuiteoapi/node-sdk": "^1.48.0",
+    "axios": "^1.7.9",
+    "dotenv": "^16.4.7",
+    "form-data": "^4.0.1"
   }
 }

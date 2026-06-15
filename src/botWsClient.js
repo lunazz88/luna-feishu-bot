@@ -5,6 +5,7 @@ const { FeishuClient } = require('./feishuClient');
 const { parseCommand, commandHelp } = require('./parseCommand');
 const { processDailyData } = require('./processDailyData');
 const { processIncomingRawFile } = require('./processIncomingRawFile');
+const { isFinalUpdateCommand } = require('./finalizeDailyCorrection');
 
 const Lark = require(path.join(config.nodeModulesDir, '@larksuiteoapi/node-sdk'));
 
@@ -233,6 +234,8 @@ async function handleFileMessage(message, summary) {
 }
 
 async function handleTextMessage(message, text) {
+  if (isFinalUpdateCommand(text)) return;
+
   if (!text || /^(help|帮助)$/i.test(text.trim())) {
     await reply(message.message_id, commandHelp());
     return;

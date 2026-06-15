@@ -1,4 +1,6 @@
 .env
+.env.robot1
+.env.robot2
 node_modules/
 .venv/
 outputs/

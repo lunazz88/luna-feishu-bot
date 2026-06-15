@@ -45,11 +45,11 @@ function apiError(apiPath, error) {
   };
 }
 
-async function tenantAccessToken() {
-  assertConfig();
-  const response = await client.post(`${config.baseUrl}/open-apis/auth/v3/tenant_access_token/internal/`, {
-    app_id: config.appId,
-    app_secret: config.appSecret,
+async function tenantAccessToken(appConfig) {
+  assertConfig(appConfig);
+  const response = await client.post(`${appConfig.baseUrl}/open-apis/auth/v3/tenant_access_token/internal/`, {
+    app_id: appConfig.appId,
+    app_secret: appConfig.appSecret,
   });
   if (!response.data || response.data.code !== 0 || !response.data.tenant_access_token) {
     const error = new Error('Failed to get tenant access token');
@@ -60,12 +60,13 @@ async function tenantAccessToken() {
 }
 
 class FeishuClient {
-  constructor() {
+  constructor(appConfig = config) {
+    this.config = appConfig;
     this.headers = null;
   }
 
   async init() {
-    const token = await tenantAccessToken();
+    const token = await tenantAccessToken(this.config);
     this.headers = {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'application/json; charset=utf-8',
@@ -76,7 +77,7 @@ class FeishuClient {
   async request(apiPath, options = {}) {
     try {
       const response = await client.request({
-        url: config.baseUrl + apiPath,
+        url: this.config.baseUrl + apiPath,
         headers: this.headers,
         ...options,
       });
@@ -96,7 +97,7 @@ class FeishuClient {
   async downloadMessageResource(messageId, fileKey, type = 'file') {
     try {
       const response = await client.request({
-        url: `${config.baseUrl}/open-apis/im/v1/messages/${encodeURIComponent(messageId)}/resources/${encodeURIComponent(fileKey)}`,
+        url: `${this.config.baseUrl}/open-apis/im/v1/messages/${encodeURIComponent(messageId)}/resources/${encodeURIComponent(fileKey)}`,
         headers: this.headers,
         method: 'GET',
         params: { type },
@@ -142,7 +143,7 @@ class FeishuClient {
   }
 
   copiedUrl(appToken, sourceUrl) {
-    const domain = sourceUrl ? new URL(sourceUrl).hostname : config.tenantDomain;
+    const domain = sourceUrl ? new URL(sourceUrl).hostname : this.config.tenantDomain;
     return `https://${domain}/base/${appToken}`;
   }
 
@@ -251,7 +252,7 @@ class FeishuClient {
   }
 
   readAdsRowsFromXlsx(filePath) {
-    const output = execFileSync(config.pythonExe, [path.join(__dirname, 'read_xlsx_values.py'), filePath], {
+    const output = execFileSync(this.config.pythonExe, [path.join(__dirname, 'read_xlsx_values.py'), filePath], {
       encoding: 'utf8',
       maxBuffer: 20 * 1024 * 1024,
     });
@@ -365,7 +366,7 @@ class FeishuClient {
 
   async copyBitable(sourceUrl, name, options = {}) {
     const sourceToken = this.appToken(sourceUrl);
-    const folderToken = options.folderToken || config.outputFolderToken || await this.rootFolderToken();
+    const folderToken = options.folderToken || this.config.outputFolderToken || await this.rootFolderToken();
     const data = await this.request(`/open-apis/drive/v1/files/${encodeURIComponent(sourceToken)}/copy`, {
       method: 'POST',
       params: { type: 'bitable' },
@@ -543,7 +544,7 @@ class FeishuClient {
 
     try {
       const response = await client.request({
-        url: `${config.baseUrl}/open-apis/im/v1/files`,
+        url: `${this.config.baseUrl}/open-apis/im/v1/files`,
         method: 'POST',
         headers: {
           Authorization: this.headers.Authorization,

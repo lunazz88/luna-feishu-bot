@@ -240,6 +240,15 @@ async function createReplicatedTable(feishu, baseUrl, source, tableName) {
   };
 }
 
+async function createTableWithRecords(feishu, baseUrl, source, tableName, records) {
+  const target = await createReplicatedTable(feishu, baseUrl, source, tableName);
+  await feishu.batchCreateRecords(target.appToken, target.tableId, records);
+  return {
+    ...target,
+    rows: records.length,
+  };
+}
+
 function normalFields(fields) {
   return fields.filter((field) => field.type !== 20 && field.ui_type !== 'Formula');
 }
@@ -464,29 +473,30 @@ async function processIncomingRawFile(options) {
   const shooterUnmatched = source.records.filter((record) => !assignedRecordIds.has(record.recordId));
   const rawRecordById = new Map(source.rawRecords.map((record) => [record.record_id, record]));
 
-  const targetUpdates = new Map(
-    writableMatches.map((match) => [match.record.recordId, metricUpdateFields(match)])
-  );
-  const target = await copySourceBitableAsResult(
+  const writableSourceRecords = writableMatches
+    .map((match) => rawRecordById.get(match.record.recordId))
+    .filter(Boolean);
+  const targetRecords = writableSourceRecords.map((record) => buildTargetRecord(record, normalFields(source.fields), writableMatchByRecordId));
+  const target = await createTableWithRecords(
     feishu,
-    shooterBaseUrl,
+    aiCorrectionBaseUrl,
     source,
     wantedOutputName,
-    writableMatches.map((match) => match.record.recordId),
-    targetUpdates
+    targetRecords
   );
 
-  const mismatchUpdates = new Map(
-    shooterMismatchMatches.map((match) => [match.record.recordId, metricUpdateFields(match)])
-  );
+  const mismatchMatchByRecordId = new Map(shooterMismatchMatches.map((match) => [match.record.recordId, match]));
+  const mismatchRecords = shooterMismatchMatches
+    .map((match) => rawRecordById.get(match.record.recordId))
+    .filter(Boolean)
+    .map((record) => buildTargetRecord(record, normalFields(source.fields), mismatchMatchByRecordId));
   const mismatchTable = shooterMismatchMatches.length
-    ? await copySourceBitableAsResult(
+    ? await createTableWithRecords(
       feishu,
-      shooterBaseUrl,
+      shooterMismatchBaseUrl,
       source,
       `${dateName}投手不一致`,
-      shooterMismatchMatches.map((match) => match.record.recordId),
-      mismatchUpdates
+      mismatchRecords
     )
     : null;
 
@@ -502,24 +512,26 @@ async function processIncomingRawFile(options) {
     crawlFailureUpdates.set(match.record.recordId, fields);
   }
   const crawlFailureTable = crawlFailureUpdates.size
-    ? await copySourceBitableAsResult(
+    ? await createTableWithRecords(
       feishu,
-      shooterBaseUrl,
+      crawlFailureBaseUrl,
       source,
       `${dateName}抓取失败`,
-      [...crawlFailureUpdates.keys()],
-      crawlFailureUpdates
+      [...crawlFailureUpdates.values()].map((fields) => ({ fields }))
     )
     : null;
 
+  const shooterUnmatchedRecords = shooterUnmatched
+    .map((record) => rawRecordById.get(record.recordId))
+    .filter(Boolean)
+    .map((record) => buildTargetRecord(record, normalFields(source.fields), new Map()));
   const unmatchedTable = shooterUnmatched.length
-    ? await copySourceBitableAsResult(
+    ? await createTableWithRecords(
       feishu,
-      shooterBaseUrl,
+      unmatchedBaseUrl,
       source,
       `${dateName}未匹配`,
-      shooterUnmatched.map((record) => record.recordId),
-      new Map()
+      shooterUnmatchedRecords
     )
     : null;
 
@@ -565,7 +577,7 @@ async function processIncomingRawFile(options) {
     reviewRows: reviewForManual.length,
     shooterUnmatchedRows: shooterUnmatched.length,
     fieldReplica: {
-      mode: 'copy_shooter_bitable_then_trim_records',
+      mode: 'create_table_pages_inside_fixed_result_bases',
       note: '结果表通过复制当天投手多维表格生成，以保留字段、公式、视图和分组',
       total: source.fields.length,
       formulas: target.formulaFields.length,
