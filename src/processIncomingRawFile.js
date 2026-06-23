@@ -242,6 +242,7 @@ async function createReplicatedTable(feishu, baseUrl, source, tableName) {
 
 async function createTableWithRecords(feishu, baseUrl, source, tableName, records) {
   const target = await createReplicatedTable(feishu, baseUrl, source, tableName);
+  await feishu.grantResultChatEdit(target.appToken);
   await feishu.batchCreateRecords(target.appToken, target.tableId, records);
   return {
     ...target,
@@ -295,6 +296,7 @@ async function copySourceBitableAsResult(feishu, sourceUrl, source, tableName, k
   const copied = await feishu.copyBitable(sourceUrl, tableName);
   const copiedTables = await waitForCopiedBitable(feishu, copied.copiedAppToken);
   await feishu.setTenantEditable(copied.copiedAppToken);
+  await feishu.grantResultChatEdit(copied.copiedAppToken);
   await feishu.grantSourceOwnerEdit(sourceUrl, copied.copiedAppToken);
   const targetTable = copiedTables.find((table) => table.name === source.table.name) || copiedTables[0];
   if (!targetTable) throw new Error(`复制多维表格后没有找到数据表：${tableName}`);

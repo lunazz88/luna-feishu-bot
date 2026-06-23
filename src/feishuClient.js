@@ -417,6 +417,51 @@ class FeishuClient {
     }
   }
 
+  async grantOpenChatEdit(appToken, chatId) {
+    if (!chatId) return { ok: false, skipped: true, reason: 'missing chatId' };
+    const member = {
+      member_type: 'openchat',
+      member_id: chatId,
+      perm: 'edit',
+      type: 'chat',
+    };
+
+    try {
+      const data = await this.request(`/open-apis/drive/v1/permissions/${encodeURIComponent(appToken)}/members`, {
+        method: 'POST',
+        params: { type: 'bitable' },
+        data: member,
+      });
+      return { ok: true, action: 'create', data };
+    } catch (createError) {
+      try {
+        const data = await this.request(
+          `/open-apis/drive/v1/permissions/${encodeURIComponent(appToken)}/members/${encodeURIComponent(chatId)}`,
+          {
+            method: 'PUT',
+            params: { type: 'bitable', member_type: 'openchat' },
+            data: {
+              perm: 'edit',
+              type: 'chat',
+            },
+          }
+        );
+        return { ok: true, action: 'update', data };
+      } catch (updateError) {
+        return {
+          ok: false,
+          action: 'create_or_update',
+          createDetails: createError.details || { message: createError.message },
+          updateDetails: updateError.details || { message: updateError.message },
+        };
+      }
+    }
+  }
+
+  async grantResultChatEdit(appToken, chatId = this.config.permissionChatId || this.config.resultChatId) {
+    return this.grantOpenChatEdit(appToken, chatId);
+  }
+
   async grantSourceOwnerEdit(sourceUrl, copiedAppToken) {
     const sourceToken = this.appToken(sourceUrl);
     const sourceMeta = await this.getMeta(sourceToken, 'bitable');

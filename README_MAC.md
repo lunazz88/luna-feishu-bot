@@ -73,6 +73,8 @@ robot2：
 
 robot2 收消息用 `.env.robot2`，写文档时通过 `FEISHU_DOC_ENV_PATH=.env.robot1` 使用 robot1 的文档权限。
 
+机器人创建或更新后发送到结果群的多维表格，会自动给 `FEISHU_PERMISSION_CHAT_ID` 对应群授予编辑权限。未配置 `FEISHU_PERMISSION_CHAT_ID` 时，默认使用 `FEISHU_RESULT_CHAT_ID`。
+
 ## 4. Lark 后台要求
 
 两个应用都要启用机器人能力和长连接事件。
@@ -110,6 +112,7 @@ FEISHU_SHOOTER_MISMATCH_BASE_URL=
 FEISHU_CRAWL_FAILURE_BASE_URL=
 FEISHU_UNMATCHED_BASE_URL=
 FEISHU_RESULT_CHAT_ID=
+FEISHU_PERMISSION_CHAT_ID=
 ```
 
 ## 6. 测试命令

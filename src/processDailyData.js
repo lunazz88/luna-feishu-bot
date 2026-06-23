@@ -160,10 +160,12 @@ async function processDailyData(options) {
       reusedExisting: true,
     };
     permissionResult = await feishu.setTenantEditable(target.appToken);
+    await feishu.grantResultChatEdit(target.appToken);
     ownerGrantResult = await feishu.grantSourceOwnerEdit(shooterUrl, target.appToken);
   } else if (execute) {
     copied = await feishu.copyBitable(shooterUrl, name);
     permissionResult = await feishu.setTenantEditable(copied.copiedAppToken);
+    await feishu.grantResultChatEdit(copied.copiedAppToken);
     ownerGrantResult = await feishu.grantSourceOwnerEdit(shooterUrl, copied.copiedAppToken);
     target = await feishu.readFirstBitable(copied.copiedUrl);
   }

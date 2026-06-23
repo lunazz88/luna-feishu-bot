@@ -40,6 +40,7 @@ const config = {
     'https://test-dj53i7nevqb8.sg.larksuite.com/wiki/D0QYwkOqiiuuHPklDz9lFvwHgfc?from=from_copylink',
   outputFolderToken: process.env.FEISHU_OUTPUT_FOLDER_TOKEN || '',
   resultChatId: process.env.FEISHU_RESULT_CHAT_ID || 'oc_7d2271c3d02bd4fe847dc8b4f8542108',
+  permissionChatId: process.env.FEISHU_PERMISSION_CHAT_ID || process.env.FEISHU_RESULT_CHAT_ID || 'oc_7d2271c3d02bd4fe847dc8b4f8542108',
   resultViewNames: (process.env.FEISHU_RESULT_VIEW_NAMES || '所有项目,按投手,按项目,按国家')
     .split(',')
     .map((name) => name.trim())
@@ -83,6 +84,7 @@ function configFromEnvFile(file) {
     unmatchedBaseUrl: env.FEISHU_UNMATCHED_BASE_URL || config.unmatchedBaseUrl,
     outputFolderToken: env.FEISHU_OUTPUT_FOLDER_TOKEN || config.outputFolderToken,
     resultChatId: env.FEISHU_RESULT_CHAT_ID || config.resultChatId,
+    permissionChatId: env.FEISHU_PERMISSION_CHAT_ID || env.FEISHU_RESULT_CHAT_ID || config.permissionChatId,
     resultViewNames: (env.FEISHU_RESULT_VIEW_NAMES || config.resultViewNames.join(','))
       .split(',')
       .map((name) => name.trim())
