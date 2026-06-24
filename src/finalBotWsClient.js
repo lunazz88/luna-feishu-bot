@@ -7,6 +7,7 @@ const {
   isFinalUpdateCommand,
   parseBusinessDate,
 } = require('./finalizeDailyCorrection');
+const { claimFinalCommand } = require('./finalCommandState');
 
 const Lark = require(path.join(config.nodeModulesDir, '@larksuiteoapi/node-sdk'));
 
@@ -40,6 +41,7 @@ async function handleMessage(data) {
   if (message.message_type !== 'text') return;
   const text = parseMessageText(message).trim();
   if (!isFinalUpdateCommand(text)) return;
+  if (!claimFinalCommand(message.message_id)) return;
 
   const businessDate = parseBusinessDate(text);
   await reply(message.message_id, `收到，开始生成 ${businessDate} 的最终修正表...`);

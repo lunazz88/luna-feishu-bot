@@ -5,7 +5,13 @@ const { FeishuClient } = require('./feishuClient');
 const { parseCommand, commandHelp } = require('./parseCommand');
 const { processDailyData } = require('./processDailyData');
 const { processIncomingRawFile } = require('./processIncomingRawFile');
-const { isFinalUpdateCommand } = require('./finalizeDailyCorrection');
+const {
+  finalizeDailyCorrection,
+  formatFinalSummary,
+  isFinalUpdateCommand,
+  parseBusinessDate,
+} = require('./finalizeDailyCorrection');
+const { claimFinalCommand } = require('./finalCommandState');
 
 const Lark = require(path.join(config.nodeModulesDir, '@larksuiteoapi/node-sdk'));
 
@@ -234,7 +240,22 @@ async function handleFileMessage(message, summary) {
 }
 
 async function handleTextMessage(message, text) {
-  if (isFinalUpdateCommand(text)) return;
+  if (isFinalUpdateCommand(text)) {
+    if (!claimFinalCommand(message.message_id)) return;
+
+    const businessDate = parseBusinessDate(text);
+    await reply(message.message_id, `收到，开始生成 ${businessDate} 的最终修正表...`);
+
+    try {
+      const result = await finalizeDailyCorrection({ businessDate });
+      await reply(message.message_id, formatFinalSummary(result));
+    } catch (error) {
+      const details = error.details || { message: error.message };
+      console.log(JSON.stringify(details, null, 2));
+      await reply(message.message_id, `生成最终修正表失败：${details.msg || details.message || '未知错误'}`);
+    }
+    return;
+  }
 
   if (!text || /^(help|帮助)$/i.test(text.trim())) {
     await reply(message.message_id, commandHelp());
