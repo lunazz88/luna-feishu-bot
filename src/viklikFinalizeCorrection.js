@@ -173,6 +173,10 @@ async function finalizeViklikAiMatch(options = {}) {
   const reviewRows = await readReviewRows(feishu, reviewApp.appToken);
   const updatesByRecordId = new Map();
   const skipped = [];
+  const shooterMismatchManual = {
+    rowsWithMetrics: 0,
+    updatedRows: 0,
+  };
 
   for (const item of reviewRows) {
     const row = item.row;
@@ -181,6 +185,7 @@ async function finalizeViklikAiMatch(options = {}) {
       skipped.push({ tableName: item.tableName, reason: '没有填写可回写的数值' });
       continue;
     }
+    if (item.tableName === '投手不一致') shooterMismatchManual.rowsWithMetrics += 1;
 
     let target = row.targetPosition ? byPosition.get(row.targetPosition) : null;
     if (!target) {
@@ -200,6 +205,7 @@ async function finalizeViklikAiMatch(options = {}) {
       ...(updatesByRecordId.get(target.recordId) || {}),
       ...updates,
     });
+    if (item.tableName === '投手不一致') shooterMismatchManual.updatedRows += 1;
   }
 
   const updates = [...updatesByRecordId.entries()].map(([recordId, fields]) => ({
@@ -235,6 +241,7 @@ async function finalizeViklikAiMatch(options = {}) {
     reviewRows: reviewRows.length,
     updatedRows: updates.length,
     skippedRows: skipped.length,
+    shooterMismatchManual,
     spendCheck,
     skipped,
   };
@@ -244,10 +251,14 @@ function formatViklikFinalSummary(result) {
   const spendLine = result.spendCheck.checked
     ? `花费校验：${result.spendCheck.ok ? '一致' : '不一致'}（XMP ${formatMoneyFromCents(result.spendCheck.xmpTotal)} / ai匹配表 ${formatMoneyFromCents(result.spendCheck.targetTotal)} / 差额 ${formatMoneyFromCents(result.spendCheck.diff)}）`
     : `花费校验：未完成（${result.spendCheck.reason}，ai匹配表 ${formatMoneyFromCents(result.spendCheck.targetTotal)}）`;
+  const shooterMismatchLine = result.shooterMismatchManual.rowsWithMetrics
+    ? `投手需人工修改：${result.shooterMismatchManual.rowsWithMetrics} 条（其中已回填数值 ${result.shooterMismatchManual.updatedRows} 条，投手字段未自动改）`
+    : '投手需人工修改：0 条';
   return [
     `更新完成：${result.targetTableName}`,
     `回写成功：${result.updatedRows} 条`,
     `跳过：${result.skippedRows} 条`,
+    shooterMismatchLine,
     spendLine,
     result.targetUrl,
     '',

@@ -24,6 +24,7 @@ const FIELD = {
   date: ['日期'],
   project: ['项目', '项目名称'],
   code: ['Code', 'code', 'CODE'],
+  standardUser: ['标准用户名'],
   shooter: ['投手'],
   country: ['国家'],
   kpi: ['KPI(美金）', 'KPI'],
@@ -216,11 +217,15 @@ class FeishuClient {
   }
 
   normalizeAdsRow(row, headers, index) {
+    const rawCode = valueToText(this.getCell(row, headers, FIELD.code));
+    const standardUser = valueToText(this.getCell(row, headers, FIELD.standardUser));
     return normalizeCommon({
       sourceRow: index + 2,
       date: valueToText(this.getCell(row, headers, FIELD.date)),
       project: valueToText(this.getCell(row, headers, FIELD.project)),
-      code: valueToText(this.getCell(row, headers, FIELD.code)),
+      code: rawCode || standardUser,
+      xmpRawCode: rawCode,
+      xmpStandardUser: standardUser,
       shooter: valueToText(this.getCell(row, headers, FIELD.shooter)),
       country: valueToText(this.getCell(row, headers, FIELD.country)),
       kpi: this.getCell(row, headers, FIELD.kpi),

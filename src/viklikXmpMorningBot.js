@@ -22,6 +22,7 @@ const FIELD = {
   date: ['日期'],
   project: ['项目', '项目名称'],
   code: ['Code', 'code', 'CODE'],
+  standardUser: ['标准用户名'],
   shooter: ['投手'],
   country: ['国家'],
   kpi: ['KPI(美金）', 'KPI'],
@@ -40,6 +41,7 @@ const METRIC_FIELDS = {
   registrations: '注册人数',
   firstDeposits: '首存人数',
 };
+const METRIC_KEYS = Object.keys(METRIC_FIELDS);
 
 const REVIEW_TABLE_FIELDS = {
   '抓取失败': [
@@ -248,11 +250,15 @@ function getCell(row, headers, names) {
 }
 
 function normalizeAdsRow(row, headers, index) {
+  const rawCode = valueToText(getCell(row, headers, FIELD.code));
+  const standardUser = valueToText(getCell(row, headers, FIELD.standardUser));
   return normalizeCommon({
     sourceRow: index + 2,
     date: valueToText(getCell(row, headers, FIELD.date)),
     project: valueToText(getCell(row, headers, FIELD.project)),
-    code: valueToText(getCell(row, headers, FIELD.code)),
+    code: rawCode || standardUser,
+    xmpRawCode: rawCode,
+    xmpStandardUser: standardUser,
     shooter: valueToText(getCell(row, headers, FIELD.shooter)),
     country: valueToText(getCell(row, headers, FIELD.country)),
     kpi: getCell(row, headers, FIELD.kpi),
@@ -519,6 +525,49 @@ function isReviewableAdsRow(row) {
   if (!row.projectNorm) return false;
   if (row.codeStrong || row.shooterNorm) return true;
   return hasMetricValue(row);
+}
+
+function sumMetricValue(left, right) {
+  if (left === null || left === undefined) return right ?? null;
+  if (right === null || right === undefined) return left ?? null;
+  return left + right;
+}
+
+function mergeAdsForMatching(adsRows) {
+  const output = [];
+  const byExactKey = new Map();
+  let mergedSourceRows = 0;
+
+  for (const row of adsRows) {
+    if (isCrawlFailure(row) || !hasExactMatchParts(row)) {
+      output.push(row);
+      continue;
+    }
+
+    const key = matchKey(row);
+    const existing = byExactKey.get(key);
+    if (!existing) {
+      const clone = normalizeCommon({
+        ...row,
+        metrics: { ...(row.metrics || {}) },
+        sourceRows: [row.sourceRow],
+        duplicateAdsRows: 1,
+      });
+      byExactKey.set(key, clone);
+      output.push(clone);
+      continue;
+    }
+
+    existing.sourceRows.push(row.sourceRow);
+    existing.sourceRow = existing.sourceRows.join(',');
+    existing.duplicateAdsRows += 1;
+    mergedSourceRows += 1;
+    for (const keyName of METRIC_KEYS) {
+      existing.metrics[keyName] = sumMetricValue(existing.metrics[keyName], row.metrics && row.metrics[keyName]);
+    }
+  }
+
+  return { rows: output, mergedSourceRows };
 }
 
 function adsProjectCodeKeys(adsRows) {
@@ -1008,7 +1057,9 @@ async function writeAiMatchTable({ feishu, baseUrl, businessDate, xmpFilePath })
   const codeRules = await loadCodeRules(feishu);
   const projectNormalizedAdsRows = applyProjectRules(readAdsRows(feishu, xmpFilePath), projectRules);
   const allAdsRows = applyCodeRules(projectNormalizedAdsRows, codeRules);
-  const adsRows = allAdsRows.filter(isReviewableAdsRow);
+  const reviewableAdsRows = allAdsRows.filter(isReviewableAdsRow);
+  const mergedAds = mergeAdsForMatching(reviewableAdsRows);
+  const adsRows = mergedAds.rows;
   const matched = matchAdsToRecords(adsRows, source.records);
   const matchByRecordId = new Map(matched.matches.map((match) => [match.record.recordId, match]));
   const assignedRecordIds = new Set(matched.matches.map((match) => match.record.recordId));
@@ -1059,8 +1110,10 @@ async function writeAiMatchTable({ feishu, baseUrl, businessDate, xmpFilePath })
     targetUrl: tableUrlFromAppToken(baseUrl, appToken, target.table_id),
     reviewApp,
     targetSyncMode: targetSync.mode,
-    adsRows: adsRows.length,
-    ignoredAdsRows: allAdsRows.length - adsRows.length,
+    adsRows: reviewableAdsRows.length,
+    mergedAdsRows: adsRows.length,
+    mergedDuplicateAdsRows: mergedAds.mergedSourceRows,
+    ignoredAdsRows: allAdsRows.length - reviewableAdsRows.length,
     codeRuleRows: codeRules.rows,
     codeRuleMissRows: matched.unmatched.filter((item) => !item.ad.codeRuleMatched).length,
     sourceRows: source.records.length,
@@ -1142,6 +1195,7 @@ async function handleTextMessage(message, text) {
         `目标表：${result.targetCreated ? '新建' : '复用并重写'}`,
         `投手表：${result.sourceTableName}`,
         `XMP数据：${result.adsRows} 条`,
+        `XMP重复合并：${result.mergedDuplicateAdsRows} 条`,
         `XMP空白项目行：${result.ignoredAdsRows} 条`,
         `标准用户名规则：${result.codeRuleRows} 条`,
         `规则未命中：${result.codeRuleMissRows} 条`,
