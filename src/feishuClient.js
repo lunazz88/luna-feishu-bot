@@ -340,6 +340,14 @@ class FeishuClient {
     return views;
   }
 
+  async getView(appToken, tableId, viewId) {
+    const data = await this.request(
+      `/open-apis/bitable/v1/apps/${encodeURIComponent(appToken)}/tables/${encodeURIComponent(tableId)}/views/${encodeURIComponent(viewId)}`,
+      { method: 'GET' }
+    );
+    return data.view || data;
+  }
+
   async createView(appToken, tableId, viewName, viewType = 'grid') {
     const data = await this.request(
       `/open-apis/bitable/v1/apps/${encodeURIComponent(appToken)}/tables/${encodeURIComponent(tableId)}/views`,

@@ -101,7 +101,7 @@ function replaceFormulaReferences(formula, oldTableId, newTableId, fieldIdMap) {
   return out;
 }
 
-async function createCorrectionTable(feishu, appToken, source, tableName) {
+async function createCorrectionTable(feishu, appToken, source, tableName, options = {}) {
   const sourceFields = source.fields;
   const normalFields = sourceFields.filter((field) => field.type !== 20 && field.ui_type !== 'Formula');
   const formulaFields = sourceFields.filter((field) => field.type === 20 || field.ui_type === 'Formula');
@@ -109,7 +109,9 @@ async function createCorrectionTable(feishu, appToken, source, tableName) {
   const restNormalFields = normalFields.filter((field) => field !== primaryField);
   const fieldIdMap = new Map();
 
-  const [defaultViewName] = config.resultViewNames.length ? config.resultViewNames : ['所有项目'];
+  const [defaultViewName] = options.viewNames && options.viewNames.length
+    ? options.viewNames
+    : config.resultViewNames.length ? config.resultViewNames : ['所有项目'];
   const created = await feishu.createTable(appToken, tableName, [cloneField(primaryField)], { defaultViewName });
   const defaultFields = await feishu.listFields(appToken, created.table_id);
   const createdPrimary = defaultFields.find((field) => field.is_primary) || defaultFields[0];

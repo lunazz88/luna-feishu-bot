@@ -202,6 +202,80 @@ function tableIdFromUrl(rawUrl) {
   }
 }
 
+function remapFieldIds(value, fieldIdMap) {
+  if (Array.isArray(value)) return value.map((item) => remapFieldIds(item, fieldIdMap));
+  if (!value || typeof value !== 'object') {
+    return typeof value === 'string' && fieldIdMap[value] ? fieldIdMap[value] : value;
+  }
+
+  const output = {};
+  for (const [key, nested] of Object.entries(value)) {
+    output[key] = remapFieldIds(nested, fieldIdMap);
+  }
+  return output;
+}
+
+function viewPropertyForPatch(sourceProperty, fieldIdMap) {
+  if (!sourceProperty) return null;
+  const property = remapFieldIds(JSON.parse(JSON.stringify(sourceProperty)), fieldIdMap);
+  if (property.hierarchy_config && !property.hierarchy_config.field_id) {
+    delete property.hierarchy_config;
+  }
+  if ('filter_info' in property && !property.filter_info) delete property.filter_info;
+  return Object.keys(property).length ? property : null;
+}
+
+async function sourceViewsWithProperty(feishu, appToken, tableId) {
+  const views = await feishu.listViews(appToken, tableId);
+  const detailed = [];
+  for (const view of views) {
+    detailed.push(await feishu.getView(appToken, tableId, view.view_id));
+  }
+  return detailed;
+}
+
+async function replicateSourceViews(feishu, appToken, targetTableId, sourceViews, fieldIdMap) {
+  const existing = await feishu.listViews(appToken, targetTableId);
+  const byName = new Map(existing.map((view) => [view.view_name, view]));
+  const created = [];
+  const patched = [];
+  const skipped = [];
+
+  for (const sourceView of sourceViews) {
+    let targetView = byName.get(sourceView.view_name);
+    if (!targetView) {
+      targetView = await feishu.createView(appToken, targetTableId, sourceView.view_name, sourceView.view_type || 'grid');
+      byName.set(targetView.view_name, targetView);
+      created.push(sourceView.view_name);
+    }
+
+    const property = viewPropertyForPatch(sourceView.property, fieldIdMap);
+    if (!property) continue;
+
+    try {
+      await feishu.patchView(appToken, targetTableId, targetView.view_id, { property });
+      patched.push(sourceView.view_name);
+    } catch (error) {
+      skipped.push({
+        viewName: sourceView.view_name,
+        reason: error.details ? error.details.msg || error.details.message : error.message,
+      });
+    }
+  }
+
+  return { created, patched, skipped };
+}
+
+function fieldIdMapByName(sourceFields, targetFields) {
+  const targetByName = new Map(targetFields.map((field) => [field.field_name, field]));
+  const out = {};
+  for (const sourceField of sourceFields) {
+    const targetField = targetByName.get(sourceField.field_name);
+    if (targetField) out[sourceField.field_id] = targetField.field_id;
+  }
+  return out;
+}
+
 async function findShooterSource(feishu, appToken, baseUrl, businessDate) {
   const dateName = chineseDateName(businessDate);
   const shortDate = dateLabel(businessDate);
@@ -235,6 +309,8 @@ async function findShooterSource(feishu, appToken, baseUrl, businessDate) {
 async function createAiMatchTable({ feishu, baseUrl, businessDate, xmpFilePath }) {
   const appToken = await feishu.resolveBitableAppToken(baseUrl);
   const source = await findShooterSource(feishu, appToken, baseUrl, businessDate);
+  const viewTemplate = source;
+  const sourceViews = await sourceViewsWithProperty(feishu, appToken, viewTemplate.table.table_id);
   const adsRows = readAdsRows(feishu, xmpFilePath);
   const matched = exactMatchAdsToRecords(adsRows, source.records);
   const rawRecordById = new Map(source.rawRecords.map((record) => [record.record_id, record]));
@@ -242,8 +318,21 @@ async function createAiMatchTable({ feishu, baseUrl, businessDate, xmpFilePath }
   const tables = await feishu.listTables(appToken);
   const wantedName = `${dateLabel(businessDate)}-ai匹配表`;
   const tableName = uniqueTableName(tables, wantedName);
-  const target = await createCorrectionTable(feishu, appToken, source, tableName);
-  await feishu.ensureClassifiedGridViews(appToken, target.table_id, config.resultViewNames);
+  const target = await createCorrectionTable(
+    feishu,
+    appToken,
+    source,
+    tableName,
+    { viewNames: sourceViews.map((view) => view.view_name).filter(Boolean) }
+  );
+  const targetFields = await feishu.listFields(appToken, target.table_id);
+  const viewReplica = await replicateSourceViews(
+    feishu,
+    appToken,
+    target.table_id,
+    sourceViews,
+    fieldIdMapByName(viewTemplate.fields, targetFields)
+  );
 
   const targetRecords = matched.matches
     .map((match) => rawRecordById.get(match.record.recordId))
@@ -258,6 +347,8 @@ async function createAiMatchTable({ feishu, baseUrl, businessDate, xmpFilePath }
     targetTableName: tableName,
     targetTableId: target.table_id,
     targetUrl: tableUrlFromAppToken(baseUrl, appToken, target.table_id),
+    viewTemplateName: viewTemplate.table.name,
+    viewReplica,
     adsRows: adsRows.length,
     sourceRows: source.records.length,
     matchedRows: matched.matches.length,
