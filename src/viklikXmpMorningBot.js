@@ -46,8 +46,10 @@ const REVIEW_TABLE_FIELDS = {
     '处理状态',
     '项目',
     'code',
+    'XMP原始code',
     '国家',
     'XMP投手',
+    'XMP原始投手',
     '晨报投手',
     '抓取状态',
     '花费金额',
@@ -62,8 +64,10 @@ const REVIEW_TABLE_FIELDS = {
     '处理状态',
     '项目',
     'code',
+    'XMP原始code',
     '国家',
     'XMP投手',
+    'XMP原始投手',
     '晨报投手',
     '花费金额',
     '展示次数',
@@ -78,8 +82,10 @@ const REVIEW_TABLE_FIELDS = {
     '处理状态',
     '项目',
     'code',
+    'XMP原始code',
     '国家',
     'XMP投手',
+    'XMP原始投手',
     '花费金额',
     '展示次数',
     '点击量',
@@ -109,8 +115,10 @@ const DEFAULT_REVIEW_FIELDS = [
   '处理状态',
   '项目',
   'code',
+  'XMP原始code',
   '国家',
   'XMP投手',
+  'XMP原始投手',
   '晨报投手',
   '花费金额',
   '展示次数',
@@ -273,6 +281,18 @@ function countryFromProject(project) {
   return match ? match[1].toUpperCase() : '';
 }
 
+function normalizedCode(value) {
+  return normalizeCommon({ code: value }).codeStrong;
+}
+
+function normalizedProject(value) {
+  return normalizeCommon({ project: value }).projectNorm;
+}
+
+function normalizedName(value) {
+  return normalizeCommon({ shooter: value }).shooterNorm;
+}
+
 async function loadProjectRules(feishu) {
   if (!config.xmpProjectRulesUrl) return new Map();
   try {
@@ -323,6 +343,113 @@ function applyProjectRules(adsRows, rules) {
       shooter: rule.shooter || row.shooter,
       country: rule.country || row.country,
       normalizedByRule: true,
+    });
+  });
+}
+
+async function loadCodeRules(feishu) {
+  if (!config.xmpCodeRulesUrl) return { byProjectCode: new Map(), rows: 0 };
+  try {
+    const values = await feishu.readSheetValues(config.xmpCodeRulesUrl, 'A1:F5000');
+    const headers = (values[0] || []).map((header) => valueToText(header).replace(/\s+/g, ''));
+    const indexOf = (names) => names.map((name) => headers.indexOf(name)).find((index) => index >= 0);
+    const projectIndex = indexOf(['项目名称', '项目']);
+    const standardUserIndex = indexOf(['标准用户名']);
+    const shooterIndex = indexOf(['投手列', '投手']);
+    const lineTypeIndex = indexOf(['总分情况']);
+    const codeIndex = indexOf(['Code', 'code']);
+    const noteIndex = indexOf(['备注']);
+    const byProjectCode = new Map();
+    let rows = 0;
+
+    for (let i = 1; i < values.length; i += 1) {
+      const row = values[i] || [];
+      const project = projectIndex >= 0 ? valueToText(row[projectIndex]) : '';
+      const standardUser = standardUserIndex >= 0 ? valueToText(row[standardUserIndex]) : '';
+      const shooter = shooterIndex >= 0 ? valueToText(row[shooterIndex]) : '';
+      if (!project || !standardUser) continue;
+
+      const rule = {
+        rowNumber: i + 1,
+        project,
+        projectNorm: normalizedProject(project),
+        standardUser,
+        standardCode: normalizedCode(standardUser),
+        shooter,
+        shooterNorm: normalizedName(shooter),
+        country: countryFromProject(project),
+        countryNorm: normalizedName(countryFromProject(project)),
+        lineType: lineTypeIndex >= 0 ? valueToText(row[lineTypeIndex]) : '',
+        xmpCode: codeIndex >= 0 ? valueToText(row[codeIndex]) : '',
+        note: noteIndex >= 0 ? valueToText(row[noteIndex]) : '',
+      };
+      rows += 1;
+
+      const codeCandidates = new Set([
+        normalizedCode(rule.xmpCode),
+        normalizedCode(rule.standardUser),
+      ].filter(Boolean));
+      for (const code of codeCandidates) {
+        const key = [rule.projectNorm, code].join('\u0001');
+        if (!byProjectCode.has(key)) byProjectCode.set(key, []);
+        byProjectCode.get(key).push(rule);
+      }
+    }
+
+    if (!rows) throw new Error('标准用户名规则表为空');
+    logStep({ event: 'xmp_code_rules_loaded', rows });
+    return { byProjectCode, rows };
+  } catch (error) {
+    logStep({
+      event: 'xmp_code_rules_load_failed',
+      details: error.details || { message: error.message },
+    });
+    throw error;
+  }
+}
+
+function pickCodeRule(row, codeRules) {
+  const candidates = codeRules.byProjectCode.get([row.projectNorm, row.codeStrong].join('\u0001')) || [];
+  if (!candidates.length) return null;
+  if (candidates.length === 1) return candidates[0];
+  return candidates.find((rule) => rule.shooterNorm && rule.shooterNorm === row.shooterNorm) || candidates[0];
+}
+
+function applyCodeRules(adsRows, codeRules) {
+  if (!codeRules || !codeRules.byProjectCode || !codeRules.byProjectCode.size) {
+    return adsRows.map((row) => ({
+      ...row,
+      xmpOriginalCode: row.originalCode || row.code,
+      xmpOriginalShooter: row.originalShooter || row.shooter,
+      codeRuleMatched: false,
+    }));
+  }
+
+  return adsRows.map((row) => {
+    const rule = pickCodeRule(row, codeRules);
+    const originalCode = row.xmpOriginalCode || row.originalCode || row.code;
+    const originalShooter = row.xmpOriginalShooter || row.originalShooter || row.shooter;
+    if (!rule) {
+      return normalizeCommon({
+        ...row,
+        xmpOriginalCode: originalCode,
+        xmpOriginalShooter: originalShooter,
+        codeRuleMatched: false,
+      });
+    }
+
+    return normalizeCommon({
+      ...row,
+      xmpOriginalCode: originalCode,
+      xmpOriginalShooter: originalShooter,
+      code: rule.standardUser || row.code,
+      shooter: rule.shooter || row.shooter,
+      country: row.country || rule.country,
+      codeRuleMatched: true,
+      codeRuleRow: rule.rowNumber,
+      codeRuleLineType: rule.lineType,
+      standardUser: rule.standardUser,
+      standardShooter: rule.shooter,
     });
   });
 }
@@ -404,25 +531,34 @@ function matchAdsToRecords(adsRows, records) {
       continue;
     }
 
+    if (!ad.codeRuleMatched) {
+      unmatched.push({
+        ad,
+        candidates: [],
+        reason: `标准用户名规则未命中：项目=${valueToText(ad.project)}，XMP原始code=${valueToText(ad.xmpOriginalCode || ad.code)}`,
+      });
+      continue;
+    }
+
     if (candidates.length === 1) {
-      matches.push({ ad, record: candidates[0], strategy: 'project+code+shooter+country' });
+      matches.push({ ad, record: candidates[0], strategy: 'project+standard_user+shooter+country' });
     } else if (candidates.length > 1) {
       duplicateRecords.push({
         ad,
         candidates,
-        reason: '晨报/投手表存在多条相同 项目+code+投手+国家，无法自动判断唯一记录',
+        reason: '晨报/投手表存在多条相同 项目+标准用户名+投手+国家，无法自动判断唯一记录',
       });
     } else if (projectCodeCountryCandidates.length) {
       shooterMismatches.push({
         ad,
         candidates: projectCodeCountryCandidates,
-        reason: '项目+code+国家一致，但投手不一致',
+        reason: '项目+标准用户名+国家一致，但投手不一致',
       });
     } else {
       unmatched.push({
         ad,
         candidates: [],
-        reason: 'XMP有该行，但晨报/投手表中找不到相同 项目+code+国家',
+        reason: 'XMP有该行，但晨报/投手表中找不到相同 项目+标准用户名+国家',
       });
     }
   }
@@ -729,8 +865,10 @@ function reviewRecord({ status, type, suggestion, reason, ad = null, record = nu
       '原因': reason,
       '项目': valueToText(project),
       'code': valueToText(code),
+      'XMP原始code': ad ? valueToText(ad.xmpOriginalCode || ad.originalCode || ad.code) : '',
       '国家': valueToText(country),
       'XMP投手': ad ? valueToText(ad.shooter) : '',
+      'XMP原始投手': ad ? valueToText(ad.xmpOriginalShooter || ad.originalShooter || ad.shooter) : '',
       '晨报投手': firstCandidate ? valueToText(firstCandidate.shooter) : '',
       '抓取状态': ad ? valueToText(ad.crawlStatus) : '',
       '花费金额': ad ? metricText(ad.metrics, 'spend') : '',
@@ -836,7 +974,9 @@ async function writeAiMatchTable({ feishu, baseUrl, businessDate, xmpFilePath })
   const target = existingTarget || await createTargetMatchTable(feishu, appToken, source, businessDate);
 
   const projectRules = await loadProjectRules(feishu);
-  const allAdsRows = applyProjectRules(readAdsRows(feishu, xmpFilePath), projectRules);
+  const codeRules = await loadCodeRules(feishu);
+  const projectNormalizedAdsRows = applyProjectRules(readAdsRows(feishu, xmpFilePath), projectRules);
+  const allAdsRows = applyCodeRules(projectNormalizedAdsRows, codeRules);
   const adsRows = allAdsRows.filter(isReviewableAdsRow);
   const matched = matchAdsToRecords(adsRows, source.records);
   const matchByRecordId = new Map(matched.matches.map((match) => [match.record.recordId, match]));
@@ -885,6 +1025,8 @@ async function writeAiMatchTable({ feishu, baseUrl, businessDate, xmpFilePath })
     targetSyncMode: targetSync.mode,
     adsRows: adsRows.length,
     ignoredAdsRows: allAdsRows.length - adsRows.length,
+    codeRuleRows: codeRules.rows,
+    codeRuleMissRows: matched.unmatched.filter((item) => !item.ad.codeRuleMatched).length,
     sourceRows: source.records.length,
     matchedRows: matched.matches.length,
     writtenRows: targetSync.writtenRows,
@@ -965,6 +1107,8 @@ async function handleTextMessage(message, text) {
         `投手表：${result.sourceTableName}`,
         `XMP数据：${result.adsRows} 条`,
         `XMP空白项目行：${result.ignoredAdsRows} 条`,
+        `标准用户名规则：${result.codeRuleRows} 条`,
+        `规则未命中：${result.codeRuleMissRows} 条`,
         `投手表：${result.sourceRows} 条`,
         `匹配成功：${result.matchedRows} 条`,
         `抓取失败：${result.crawlFailureRows} 条`,

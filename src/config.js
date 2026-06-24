@@ -46,6 +46,9 @@ const config = {
   xmpProjectRulesUrl:
     process.env.FEISHU_XMP_PROJECT_RULES_URL ||
     'https://xgmwug5ljj1.sg.larksuite.com/wiki/UG8WwBgXoimuu8kWZ0vlHzPNgpd?sheet=Nwd4m0',
+  xmpCodeRulesUrl:
+    process.env.FEISHU_XMP_CODE_RULES_URL ||
+    'https://xgmwug5ljj1.sg.larksuite.com/wiki/UG8WwBgXoimuu8kWZ0vlHzPNgpd?sheet=3bf3ab',
   resultViewNames: (process.env.FEISHU_RESULT_VIEW_NAMES || '所有项目,按投手,按项目,按国家')
     .split(',')
     .map((name) => name.trim())
@@ -93,6 +96,7 @@ function configFromEnvFile(file) {
     xmpSourceChatId: env.FEISHU_XMP_SOURCE_CHAT_ID || config.xmpSourceChatId,
     xmpOperatorChatId: env.FEISHU_XMP_OPERATOR_CHAT_ID || config.xmpOperatorChatId,
     xmpProjectRulesUrl: env.FEISHU_XMP_PROJECT_RULES_URL || config.xmpProjectRulesUrl,
+    xmpCodeRulesUrl: env.FEISHU_XMP_CODE_RULES_URL || config.xmpCodeRulesUrl,
     resultViewNames: (env.FEISHU_RESULT_VIEW_NAMES || config.resultViewNames.join(','))
       .split(',')
       .map((name) => name.trim())
