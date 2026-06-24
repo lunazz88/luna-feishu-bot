@@ -305,10 +305,17 @@ class FeishuClient {
   }
 
   async listTables(appToken) {
-    const data = await this.request(`/open-apis/bitable/v1/apps/${encodeURIComponent(appToken)}/tables`, {
-      method: 'GET',
-    });
-    return data.items || [];
+    const tables = [];
+    let pageToken;
+    do {
+      const data = await this.request(`/open-apis/bitable/v1/apps/${encodeURIComponent(appToken)}/tables`, {
+        method: 'GET',
+        params: { page_size: 100, page_token: pageToken },
+      });
+      tables.push(...(data.items || []));
+      pageToken = data.has_more ? data.page_token : undefined;
+    } while (pageToken);
+    return tables;
   }
 
   async listFields(appToken, tableId) {
