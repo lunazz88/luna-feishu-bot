@@ -711,6 +711,11 @@ async function processIncomingRawFile(options) {
 }
 
 module.exports = {
-  processIncomingRawFile,
+  buildTargetRecord,
   chineseDateName,
+  createCorrectionTable,
+  normalFields,
+  processIncomingRawFile,
+  tableUrlFromAppToken,
+  uniqueTableName,
 };

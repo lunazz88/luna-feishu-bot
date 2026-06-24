@@ -41,6 +41,8 @@ const config = {
   outputFolderToken: process.env.FEISHU_OUTPUT_FOLDER_TOKEN || '',
   resultChatId: process.env.FEISHU_RESULT_CHAT_ID || 'oc_7d2271c3d02bd4fe847dc8b4f8542108',
   permissionChatId: process.env.FEISHU_PERMISSION_CHAT_ID || process.env.FEISHU_RESULT_CHAT_ID || 'oc_7d2271c3d02bd4fe847dc8b4f8542108',
+  xmpSourceChatId: process.env.FEISHU_XMP_SOURCE_CHAT_ID || '',
+  xmpOperatorChatId: process.env.FEISHU_XMP_OPERATOR_CHAT_ID || '',
   resultViewNames: (process.env.FEISHU_RESULT_VIEW_NAMES || '所有项目,按投手,按项目,按国家')
     .split(',')
     .map((name) => name.trim())
@@ -85,6 +87,8 @@ function configFromEnvFile(file) {
     outputFolderToken: env.FEISHU_OUTPUT_FOLDER_TOKEN || config.outputFolderToken,
     resultChatId: env.FEISHU_RESULT_CHAT_ID || config.resultChatId,
     permissionChatId: env.FEISHU_PERMISSION_CHAT_ID || env.FEISHU_RESULT_CHAT_ID || config.permissionChatId,
+    xmpSourceChatId: env.FEISHU_XMP_SOURCE_CHAT_ID || config.xmpSourceChatId,
+    xmpOperatorChatId: env.FEISHU_XMP_OPERATOR_CHAT_ID || config.xmpOperatorChatId,
     resultViewNames: (env.FEISHU_RESULT_VIEW_NAMES || config.resultViewNames.join(','))
       .split(',')
       .map((name) => name.trim())
