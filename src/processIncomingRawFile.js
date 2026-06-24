@@ -12,6 +12,19 @@ const METRIC_FIELDS = {
   firstDeposits: '首存人数',
 };
 
+const REVIEW_FIELD_NAMES = [
+  '问题类型',
+  '匹配失败原因',
+  'XMP原始项目',
+  'XMP原始code',
+  'XMP原始投手',
+  '晨报表项目',
+  '晨报表code',
+  '晨报表投手',
+  '建议以谁为准',
+  '处理建议',
+];
+
 function ensureDir(dir) {
   fs.mkdirSync(dir, { recursive: true });
 }
@@ -240,12 +253,45 @@ async function createReplicatedTable(feishu, baseUrl, source, tableName) {
   };
 }
 
+async function ensureReviewFields(feishu, appToken, tableId, existingFields) {
+  const fields = [...existingFields];
+  const existingNames = new Set(fields.map((field) => field.field_name));
+  for (const fieldName of REVIEW_FIELD_NAMES) {
+    if (existingNames.has(fieldName)) continue;
+    const created = await feishu.createField(appToken, tableId, {
+      field_name: fieldName,
+      type: 1,
+      ui_type: 'Text',
+    });
+    fields.push({
+      field_id: created.field_id,
+      field_name: fieldName,
+      type: 1,
+      ui_type: 'Text',
+    });
+    existingNames.add(fieldName);
+  }
+  return fields;
+}
+
 async function createTableWithRecords(feishu, baseUrl, source, tableName, records) {
   const target = await createReplicatedTable(feishu, baseUrl, source, tableName);
   await feishu.grantResultChatEdit(target.appToken);
   await feishu.batchCreateRecords(target.appToken, target.tableId, records);
   return {
     ...target,
+    rows: records.length,
+  };
+}
+
+async function createReviewTableWithRecords(feishu, baseUrl, source, tableName, records) {
+  const target = await createReplicatedTable(feishu, baseUrl, source, tableName);
+  const fields = await ensureReviewFields(feishu, target.appToken, target.tableId, target.normalFields);
+  await feishu.grantResultChatEdit(target.appToken);
+  await feishu.batchCreateRecords(target.appToken, target.tableId, records);
+  return {
+    ...target,
+    normalFields: fields,
     rows: records.length,
   };
 }
@@ -411,6 +457,26 @@ function buildAdRecordForTarget(ad, normalFields, sourceRecord = null) {
   return { fields };
 }
 
+function addReviewFields(record, details) {
+  record.fields['问题类型'] = details.issueType || '';
+  record.fields['匹配失败原因'] = details.reason || '';
+  record.fields['XMP原始项目'] = details.ad ? valueToText(details.ad.project) : '';
+  record.fields['XMP原始code'] = details.ad ? valueToText(details.ad.code) : '';
+  record.fields['XMP原始投手'] = details.ad ? valueToText(details.ad.shooter) : '';
+  record.fields['晨报表项目'] = details.record ? valueToText(details.record.project) : '';
+  record.fields['晨报表code'] = details.record ? valueToText(details.record.code) : '';
+  record.fields['晨报表投手'] = details.record ? valueToText(details.record.shooter) : '';
+  record.fields['建议以谁为准'] = details.sourceOfTruth || '';
+  record.fields['处理建议'] = details.suggestion || '';
+  return record;
+}
+
+function unmatchedReasonText(reason) {
+  if (reason === 'no_candidate') return 'XMP有该行，但晨报/投手表中找不到可匹配记录';
+  if (String(reason || '').includes('duplicate')) return '找到多个候选记录，无法自动判断唯一匹配';
+  return String(reason || '未匹配');
+}
+
 function buildMismatchRecordForTarget(match, normalFields) {
   const sourceRecord = {
     record_id: match.record.recordId,
@@ -489,11 +555,24 @@ async function processIncomingRawFile(options) {
 
   const mismatchMatchByRecordId = new Map(shooterMismatchMatches.map((match) => [match.record.recordId, match]));
   const mismatchRecords = shooterMismatchMatches
-    .map((match) => rawRecordById.get(match.record.recordId))
-    .filter(Boolean)
-    .map((record) => buildTargetRecord(record, normalFields(source.fields), mismatchMatchByRecordId));
+    .map((match) => {
+      const record = rawRecordById.get(match.record.recordId);
+      if (!record) return null;
+      return addReviewFields(
+        buildTargetRecord(record, normalFields(source.fields), mismatchMatchByRecordId),
+        {
+          issueType: '投手不一致',
+          reason: 'XMP原始投手与晨报/投手表投手不一致',
+          ad: match.ad,
+          record: match.record,
+          sourceOfTruth: '待人工确认',
+          suggestion: '请人工核对实际归属投手；确认后在表内调整投手或指标',
+        }
+      );
+    })
+    .filter(Boolean);
   const mismatchTable = shooterMismatchMatches.length
-    ? await createTableWithRecords(
+    ? await createReviewTableWithRecords(
       feishu,
       shooterMismatchBaseUrl,
       source,
@@ -505,35 +584,70 @@ async function processIncomingRawFile(options) {
   const crawlFailureMatchBySourceRow = new Map(
     crawlFailureMatched.matches.map((match) => [match.ad.sourceRow, match])
   );
-  const crawlFailureUpdates = new Map();
+  const crawlFailureRecords = [];
   for (const ad of crawlFailedRows) {
     const match = crawlFailureMatchBySourceRow.get(ad.sourceRow);
-    if (!match) continue;
-    const sourceRecord = rawRecordById.get(match.record.recordId);
-    const fields = buildAdRecordForTarget(ad, normalFields(source.fields), sourceRecord).fields;
-    crawlFailureUpdates.set(match.record.recordId, fields);
+    const sourceRecord = match ? rawRecordById.get(match.record.recordId) : null;
+    crawlFailureRecords.push(addReviewFields(
+      buildAdRecordForTarget(ad, normalFields(source.fields), sourceRecord),
+      {
+        issueType: '抓取失败',
+        reason: match
+          ? 'XMP原始数据标记为抓取失败/无数据，但已找到晨报/投手表候选记录'
+          : 'XMP原始数据标记为抓取失败/无数据，且晨报/投手表未找到匹配记录',
+        ad,
+        record: match ? match.record : null,
+        sourceOfTruth: '待人工确认',
+        suggestion: '优先确认后台/XMP抓取状态；如确有数据，请人工补充',
+      }
+    ));
   }
-  const crawlFailureTable = crawlFailureUpdates.size
-    ? await createTableWithRecords(
+  const crawlFailureTable = crawlFailureRecords.length
+    ? await createReviewTableWithRecords(
       feishu,
       crawlFailureBaseUrl,
       source,
       `${dateName}抓取失败`,
-      [...crawlFailureUpdates.values()].map((fields) => ({ fields }))
+      crawlFailureRecords
     )
     : null;
 
+  const xmpUnmatchedRecords = matched.unmatched.map(({ ad, reason }) => addReviewFields(
+    buildAdRecordForTarget(ad, normalFields(source.fields), null),
+    {
+      issueType: 'XMP有，晨报/投手表未匹配',
+      reason: unmatchedReasonText(reason),
+      ad,
+      record: null,
+      sourceOfTruth: 'XMP原始数据',
+      suggestion: '请确认晨报/投手表是否缺项目、缺code或命名不一致；必要时补维护表',
+    }
+  ));
   const shooterUnmatchedRecords = shooterUnmatched
-    .map((record) => rawRecordById.get(record.recordId))
-    .filter(Boolean)
-    .map((record) => buildTargetRecord(record, normalFields(source.fields), new Map()));
-  const unmatchedTable = shooterUnmatched.length
-    ? await createTableWithRecords(
+    .map((record) => {
+      const rawRecord = rawRecordById.get(record.recordId);
+      if (!rawRecord) return null;
+      return addReviewFields(
+        buildTargetRecord(rawRecord, normalFields(source.fields), new Map()),
+        {
+          issueType: '晨报/投手表有，XMP未匹配',
+          reason: '晨报/投手表有该记录，但XMP原始数据中没有匹配行',
+          ad: null,
+          record,
+          sourceOfTruth: '晨报/投手表',
+          suggestion: '请确认XMP是否漏抓、项目是否停投、code/国家/KPI是否维护错误',
+        }
+      );
+    })
+    .filter(Boolean);
+  const allUnmatchedRecords = [...xmpUnmatchedRecords, ...shooterUnmatchedRecords];
+  const unmatchedTable = allUnmatchedRecords.length
+    ? await createReviewTableWithRecords(
       feishu,
       unmatchedBaseUrl,
       source,
       `${dateName}未匹配`,
-      shooterUnmatchedRecords
+      allUnmatchedRecords
     )
     : null;
 
