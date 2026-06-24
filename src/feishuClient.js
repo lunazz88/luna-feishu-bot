@@ -479,7 +479,7 @@ class FeishuClient {
     do {
       const data = await this.request(
         `/open-apis/bitable/v1/apps/${encodeURIComponent(appToken)}/tables/${encodeURIComponent(tableId)}/records`,
-        { method: 'GET', params: { page_size: 500, page_token: pageToken } }
+        { method: 'GET', params: { page_size: 100, page_token: pageToken } }
       );
       records.push(...(data.items || []));
       pageToken = data.has_more ? data.page_token : undefined;

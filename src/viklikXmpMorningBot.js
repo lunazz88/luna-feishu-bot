@@ -9,7 +9,6 @@ const {
   createCorrectionTable,
   normalFields,
   tableUrlFromAppToken,
-  uniqueTableName,
 } = require('./processIncomingRawFile');
 
 const Lark = require(path.join(config.nodeModulesDir, '@larksuiteoapi/node-sdk'));
@@ -202,6 +201,10 @@ function tableIdFromUrl(rawUrl) {
   }
 }
 
+function targetMatchTableName(businessDate) {
+  return `${paddedDateLabel(businessDate)}-ai匹配表`;
+}
+
 function remapFieldIds(value, fieldIdMap) {
   if (Array.isArray(value)) return value.map((item) => remapFieldIds(item, fieldIdMap));
   if (!value || typeof value !== 'object') {
@@ -266,14 +269,36 @@ async function replicateSourceViews(feishu, appToken, targetTableId, sourceViews
   return { created, patched, skipped };
 }
 
-function fieldIdMapByName(sourceFields, targetFields) {
-  const targetByName = new Map(targetFields.map((field) => [field.field_name, field]));
-  const out = {};
-  for (const sourceField of sourceFields) {
-    const targetField = targetByName.get(sourceField.field_name);
-    if (targetField) out[sourceField.field_id] = targetField.field_id;
-  }
-  return out;
+async function findTargetMatchTable(feishu, appToken, businessDate) {
+  const tables = await feishu.listTables(appToken);
+  const targetName = targetMatchTableName(businessDate);
+  return tables.find((table) => table.name === targetName) || null;
+}
+
+async function createTargetMatchTable(feishu, appToken, source, businessDate) {
+  const sourceViews = await sourceViewsWithProperty(feishu, appToken, source.table.table_id);
+  const targetName = targetMatchTableName(businessDate);
+  const target = await createCorrectionTable(
+    feishu,
+    appToken,
+    source,
+    targetName,
+    { viewNames: sourceViews.map((view) => view.view_name).filter(Boolean) }
+  );
+  const viewReplica = await replicateSourceViews(
+    feishu,
+    appToken,
+    target.table_id,
+    sourceViews,
+    target.fieldIdMap || {}
+  );
+
+  return {
+    table_id: target.table_id,
+    name: targetName,
+    created: true,
+    viewReplica,
+  };
 }
 
 async function findShooterSource(feishu, appToken, baseUrl, businessDate) {
@@ -306,53 +331,51 @@ async function findShooterSource(feishu, appToken, baseUrl, businessDate) {
   return feishu.readBitableTable(appToken, table.table_id);
 }
 
-async function createAiMatchTable({ feishu, baseUrl, businessDate, xmpFilePath }) {
+async function clearTableRecords(feishu, appToken, tableId) {
+  const records = await feishu.listRecords(appToken, tableId);
+  await feishu.batchDeleteRecords(appToken, tableId, records.map((record) => record.record_id).filter(Boolean));
+  return records.length;
+}
+
+function buildMatchRecord(sourceRecord, sourceFields, matchByRecordId) {
+  const record = buildTargetRecord(sourceRecord, normalFields(sourceFields), matchByRecordId);
+  const match = matchByRecordId.get(sourceRecord.record_id);
+  record.fields['花费金额'] = match ? match.ad.metrics.spend ?? 0 : 0;
+  record.fields['展示次数'] = match ? match.ad.metrics.impressions ?? 0 : 0;
+  record.fields['点击量'] = match ? match.ad.metrics.clicks ?? 0 : 0;
+  record.fields['注册人数'] = match ? match.ad.metrics.registrations ?? 0 : 0;
+  record.fields['首存人数'] = match ? match.ad.metrics.firstDeposits ?? 0 : 0;
+  return record;
+}
+
+async function writeAiMatchTable({ feishu, baseUrl, businessDate, xmpFilePath }) {
   const appToken = await feishu.resolveBitableAppToken(baseUrl);
   const source = await findShooterSource(feishu, appToken, baseUrl, businessDate);
-  const viewTemplate = source;
-  const sourceViews = await sourceViewsWithProperty(feishu, appToken, viewTemplate.table.table_id);
+  const existingTarget = await findTargetMatchTable(feishu, appToken, businessDate);
+  const target = existingTarget || await createTargetMatchTable(feishu, appToken, source, businessDate);
+
   const adsRows = readAdsRows(feishu, xmpFilePath);
   const matched = exactMatchAdsToRecords(adsRows, source.records);
-  const rawRecordById = new Map(source.rawRecords.map((record) => [record.record_id, record]));
   const matchByRecordId = new Map(matched.matches.map((match) => [match.record.recordId, match]));
-  const tables = await feishu.listTables(appToken);
-  const wantedName = `${dateLabel(businessDate)}-ai匹配表`;
-  const tableName = uniqueTableName(tables, wantedName);
-  const target = await createCorrectionTable(
-    feishu,
-    appToken,
-    source,
-    tableName,
-    { viewNames: sourceViews.map((view) => view.view_name).filter(Boolean) }
-  );
-  const targetFields = await feishu.listFields(appToken, target.table_id);
-  const viewReplica = await replicateSourceViews(
-    feishu,
-    appToken,
-    target.table_id,
-    sourceViews,
-    fieldIdMapByName(viewTemplate.fields, targetFields)
-  );
 
-  const targetRecords = matched.matches
-    .map((match) => rawRecordById.get(match.record.recordId))
-    .filter(Boolean)
-    .map((record) => buildTargetRecord(record, normalFields(source.fields), matchByRecordId));
+  const targetRecords = source.rawRecords.map((record) => buildMatchRecord(record, source.fields, matchByRecordId));
+  const deletedRows = await clearTableRecords(feishu, appToken, target.table_id);
   await feishu.batchCreateRecords(appToken, target.table_id, targetRecords);
 
   return {
     appToken,
     sourceTableName: source.table.name,
     sourceTableId: source.table.table_id,
-    targetTableName: tableName,
+    targetTableName: target.name,
     targetTableId: target.table_id,
+    targetCreated: !!target.created,
+    viewReplica: target.viewReplica || null,
     targetUrl: tableUrlFromAppToken(baseUrl, appToken, target.table_id),
-    viewTemplateName: viewTemplate.table.name,
-    viewReplica,
     adsRows: adsRows.length,
     sourceRows: source.records.length,
     matchedRows: matched.matches.length,
     writtenRows: targetRecords.length,
+    deletedRows,
     unmatchedRows: matched.unmatched.length,
     duplicateRows: matched.duplicateRecords.length,
   };
@@ -411,7 +434,7 @@ async function handleTextMessage(message, text) {
   await reply(message.message_id, `收到，开始处理 ${businessDate} 的 XMP 晨报匹配。`);
   try {
     const feishu = await new FeishuClient().init();
-    const result = await createAiMatchTable({
+    const result = await writeAiMatchTable({
       feishu,
       baseUrl: config.shooterBaseUrl,
       businessDate,
@@ -421,10 +444,12 @@ async function handleTextMessage(message, text) {
       message.message_id,
       [
         `处理完成：${result.targetTableName}`,
+        `目标表：${result.targetCreated ? '新建' : '复用并重写'}`,
         `投手表：${result.sourceTableName}`,
         `XMP数据：${result.adsRows} 条`,
         `投手表：${result.sourceRows} 条`,
         `匹配成功：${result.matchedRows} 条`,
+        `清空旧记录：${result.deletedRows} 条`,
         `写入新表：${result.writtenRows} 条`,
         `未匹配：${result.unmatchedRows} 条`,
         `重复候选：${result.duplicateRows} 条`,
