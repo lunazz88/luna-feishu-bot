@@ -299,10 +299,12 @@ async function loadProjectRules(feishu) {
     const values = await feishu.readSheetValues(config.xmpProjectRulesUrl, 'A1:H5000');
     const headers = (values[0] || []).map((header) => valueToText(header).replace(/\s+/g, ''));
     const indexOf = (names) => names.map((name) => headers.indexOf(name)).find((index) => index >= 0);
-    const irregularIndex = indexOf(['不规则情况']);
-    const projectIndex = indexOf(['项目名称', '项目']);
+    const irregularIndex = indexOf(['不规则情况', 'others', 'Others', 'other', 'Other', '别名', '项目别名']);
+    const projectIndex = indexOf(['项目名称', '项目', 'project', 'Project']);
     const codeIndex = indexOf(['Code', 'code']);
+    const standardUserIndex = indexOf(['标准用户名']);
     const shooterIndex = indexOf(['投手']);
+    const orderIndex = indexOf(['顺序', 'order', 'Order']);
     const rules = new Map();
 
     for (const row of values.slice(1)) {
@@ -311,7 +313,9 @@ async function loadProjectRules(feishu) {
       if (!irregular || !project) continue;
       rules.set(ruleLookupText(irregular), {
         project,
+        order: orderIndex >= 0 ? valueToText(row[orderIndex]) : '',
         code: codeIndex >= 0 ? valueToText(row[codeIndex]) : '',
+        standardUser: standardUserIndex >= 0 ? valueToText(row[standardUserIndex]) : '',
         shooter: shooterIndex >= 0 ? valueToText(row[shooterIndex]) : '',
         country: countryFromProject(project),
       });
@@ -339,10 +343,13 @@ function applyProjectRules(adsRows, rules) {
       originalShooter: row.shooter,
       originalCountry: row.country,
       project: rule.project || row.project,
-      code: rule.code || row.code,
+      code: rule.standardUser || rule.code || row.code,
       shooter: rule.shooter || row.shooter,
       country: rule.country || row.country,
       normalizedByRule: true,
+      projectRuleOrder: rule.order,
+      standardUser: rule.standardUser || '',
+      standardShooter: rule.shooter || '',
     });
   });
 }
@@ -429,6 +436,17 @@ function applyCodeRules(adsRows, codeRules) {
     const rule = pickCodeRule(row, codeRules);
     const originalCode = row.xmpOriginalCode || row.originalCode || row.code;
     const originalShooter = row.xmpOriginalShooter || row.originalShooter || row.shooter;
+    if (!rule && row.normalizedByRule && row.standardUser) {
+      return normalizeCommon({
+        ...row,
+        xmpOriginalCode: originalCode,
+        xmpOriginalShooter: originalShooter,
+        code: row.standardUser,
+        shooter: row.standardShooter || row.shooter,
+        codeRuleMatched: true,
+        codeRuleSource: 'project_rule',
+      });
+    }
     if (!rule) {
       return normalizeCommon({
         ...row,
