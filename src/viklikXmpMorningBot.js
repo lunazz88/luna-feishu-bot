@@ -480,6 +480,10 @@ function projectCodeCountryKey(row) {
   return [row.projectNorm, row.codeStrong, row.countryNorm].join('\u0001');
 }
 
+function projectCodeKey(row) {
+  return [row.projectNorm, row.codeStrong].join('\u0001');
+}
+
 function hasExactMatchParts(row) {
   return Boolean(row.projectNorm && row.codeStrong && row.shooterNorm && row.countryNorm);
 }
@@ -511,6 +515,16 @@ function isReviewableAdsRow(row) {
   if (!row.projectNorm) return false;
   if (row.codeStrong || row.shooterNorm) return true;
   return hasMetricValue(row);
+}
+
+function adsProjectCodeKeys(adsRows) {
+  const keys = new Set();
+  for (const row of adsRows) {
+    if (row.projectNorm && row.codeStrong) keys.add(projectCodeKey(row));
+    const originalCode = normalizedCode(row.xmpOriginalCode || row.originalCode);
+    if (row.projectNorm && originalCode) keys.add([row.projectNorm, originalCode].join('\u0001'));
+  }
+  return keys;
 }
 
 function indexRecords(records, keyFn) {
@@ -1008,7 +1022,12 @@ async function writeAiMatchTable({ feishu, baseUrl, businessDate, xmpFilePath })
   for (const item of matched.duplicateRecords) {
     for (const candidate of item.candidates) assignedRecordIds.add(candidate.recordId);
   }
-  const shooterOnlyRecords = source.records.filter((record) => isReviewableSourceRecord(record) && !assignedRecordIds.has(record.recordId));
+  const adsProjectCodes = adsProjectCodeKeys(adsRows);
+  const shooterOnlyRecords = source.records.filter((record) => (
+    isReviewableSourceRecord(record)
+    && !assignedRecordIds.has(record.recordId)
+    && !adsProjectCodes.has(projectCodeKey(record))
+  ));
 
   const targetRecords = source.rawRecords.map((record) => buildMatchRecord(record, source.fields, matchByRecordId));
   const targetSync = await syncMatchTableRecords(feishu, appToken, target, targetRecords);
