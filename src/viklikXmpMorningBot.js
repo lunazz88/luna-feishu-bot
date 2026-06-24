@@ -177,9 +177,18 @@ function parseCommandDate(text, now = new Date()) {
   return `${now.getFullYear()}-${short[1].padStart(2, '0')}-${short[2].padStart(2, '0')}`;
 }
 
+function commandTextWithoutMentions(text) {
+  return String(text || '').replace(/@_user_\d+\s*/g, '').trim();
+}
+
+function isFinalRobotCommand(text) {
+  return /^(更新|回写|写回|同步|修正)/.test(commandTextWithoutMentions(text));
+}
+
 function shouldTreatAsCommand(message, text) {
   if (config.xmpOperatorChatId && message.chat_id !== config.xmpOperatorChatId) return false;
   if (!parseCommandDate(text)) return false;
+  if (isFinalRobotCommand(text)) return false;
   if (config.xmpOperatorChatId) return true;
   return /@|xmp|XMP|匹配|晨报/.test(text);
 }

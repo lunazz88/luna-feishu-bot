@@ -76,9 +76,12 @@ function parseChineseNumber(text) {
 }
 
 function parseBusinessDate(text, now = new Date()) {
-  const value = String(text || '').trim();
+  const value = String(text || '').replace(/@_user_\d+\s*/g, '').trim();
   const full = value.match(/(20\d{2})[-/.年](\d{1,2})[-/.月](\d{1,2})/);
   if (full) return `${full[1]}-${full[2].padStart(2, '0')}-${full[3].padStart(2, '0')}`;
+
+  const short = value.match(/(?:更新)?\s*(\d{1,2})\s*[./-]\s*(\d{1,2})\s*(?:的)?\s*(?:数据)?/);
+  if (short) return `${now.getFullYear()}-${short[1].padStart(2, '0')}-${short[2].padStart(2, '0')}`;
 
   const numeric = value.match(/(?:更新)?\s*(\d{1,2})\s*月\s*(\d{1,2})\s*(?:日|号)?\s*(?:的)?\s*(?:数据)?/);
   if (numeric) return `${now.getFullYear()}-${numeric[1].padStart(2, '0')}-${numeric[2].padStart(2, '0')}`;
@@ -94,7 +97,8 @@ function parseBusinessDate(text, now = new Date()) {
 }
 
 function isFinalUpdateCommand(text) {
-  return Boolean(parseBusinessDate(text)) && /^更新/.test(String(text || '').trim());
+  const value = String(text || '').replace(/@_user_\d+\s*/g, '').trim();
+  return Boolean(parseBusinessDate(value)) && /^更新/.test(value);
 }
 
 function collectSummaryFiles(root) {
