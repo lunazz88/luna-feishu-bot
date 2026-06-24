@@ -1,6 +1,8 @@
 .env
 .env.robot1
 .env.robot2
+.env.viklik.robot1
+.env.viklik.robot2
 node_modules/
 .venv/
 outputs/
