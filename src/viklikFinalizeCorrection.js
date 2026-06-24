@@ -199,7 +199,6 @@ async function finalizeViklikAiMatch(options = {}) {
     updatesByRecordId.set(target.recordId, {
       ...(updatesByRecordId.get(target.recordId) || {}),
       ...updates,
-      '投手': target.shooter,
     });
   }
 
