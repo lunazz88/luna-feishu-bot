@@ -10,12 +10,14 @@ const {
 
 const axios = require(path.join(config.nodeModulesDir, 'axios'));
 const FormData = require(path.join(config.nodeModulesDir, 'form-data'));
-const client = axios.create({ timeout: 30000 });
+const client = axios.create({ timeout: Number(process.env.FEISHU_API_TIMEOUT_MS || 120000) });
 const RETRYABLE_NETWORK_PATTERNS = [
   /before secure TLS connection was established/i,
   /socket disconnected/i,
   /EAI_AGAIN/i,
   /ECONNREFUSED/i,
+  /ECONNABORTED/i,
+  /timeout of \d+ms exceeded/i,
 ];
 
 const FIELD = {
@@ -479,7 +481,7 @@ class FeishuClient {
     do {
       const data = await this.request(
         `/open-apis/bitable/v1/apps/${encodeURIComponent(appToken)}/tables/${encodeURIComponent(tableId)}/records`,
-        { method: 'GET', params: { page_size: 100, page_token: pageToken } }
+        { method: 'GET', params: { page_size: 20, page_token: pageToken } }
       );
       records.push(...(data.items || []));
       pageToken = data.has_more ? data.page_token : undefined;
