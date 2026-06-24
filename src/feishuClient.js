@@ -11,6 +11,12 @@ const {
 const axios = require(path.join(config.nodeModulesDir, 'axios'));
 const FormData = require(path.join(config.nodeModulesDir, 'form-data'));
 const client = axios.create({ timeout: 30000 });
+const RETRYABLE_NETWORK_PATTERNS = [
+  /before secure TLS connection was established/i,
+  /socket disconnected/i,
+  /EAI_AGAIN/i,
+  /ECONNREFUSED/i,
+];
 
 const FIELD = {
   date: ['日期'],
@@ -45,12 +51,51 @@ function apiError(apiPath, error) {
   };
 }
 
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function isRetryableNetworkError(error) {
+  if (!error || error.response) return false;
+  const message = `${error.message || ''} ${error.code || ''}`;
+  return RETRYABLE_NETWORK_PATTERNS.some((pattern) => pattern.test(message));
+}
+
+async function requestWithNetworkRetry(requestConfig, context = {}) {
+  const retries = context.retries ?? 4;
+  const label = context.label || requestConfig.url || 'lark api';
+
+  for (let attempt = 0; attempt <= retries; attempt += 1) {
+    try {
+      return await client.request(requestConfig);
+    } catch (error) {
+      if (attempt >= retries || !isRetryableNetworkError(error)) throw error;
+
+      const delayMs = Math.min(1000 * 2 ** attempt, 8000);
+      console.log(JSON.stringify({
+        event: 'lark_api_network_retry',
+        label,
+        attempt: attempt + 1,
+        nextDelayMs: delayMs,
+        message: error.message,
+      }));
+      await sleep(delayMs);
+    }
+  }
+
+  throw new Error(`Unexpected retry state: ${label}`);
+}
+
 async function tenantAccessToken(appConfig) {
   assertConfig(appConfig);
-  const response = await client.post(`${appConfig.baseUrl}/open-apis/auth/v3/tenant_access_token/internal/`, {
-    app_id: appConfig.appId,
-    app_secret: appConfig.appSecret,
-  });
+  const response = await requestWithNetworkRetry({
+    url: `${appConfig.baseUrl}/open-apis/auth/v3/tenant_access_token/internal/`,
+    method: 'POST',
+    data: {
+      app_id: appConfig.appId,
+      app_secret: appConfig.appSecret,
+    },
+  }, { label: '/open-apis/auth/v3/tenant_access_token/internal/' });
   if (!response.data || response.data.code !== 0 || !response.data.tenant_access_token) {
     const error = new Error('Failed to get tenant access token');
     error.response = { status: response.status, data: response.data };
@@ -76,11 +121,11 @@ class FeishuClient {
 
   async request(apiPath, options = {}) {
     try {
-      const response = await client.request({
+      const response = await requestWithNetworkRetry({
         url: this.config.baseUrl + apiPath,
         headers: this.headers,
         ...options,
-      });
+      }, { label: apiPath });
       if (!response.data || response.data.code !== 0) {
         const error = new Error('Lark API error');
         error.response = { status: response.status, data: response.data };
@@ -96,13 +141,13 @@ class FeishuClient {
 
   async downloadMessageResource(messageId, fileKey, type = 'file') {
     try {
-      const response = await client.request({
+      const response = await requestWithNetworkRetry({
         url: `${this.config.baseUrl}/open-apis/im/v1/messages/${encodeURIComponent(messageId)}/resources/${encodeURIComponent(fileKey)}`,
         headers: this.headers,
         method: 'GET',
         params: { type },
         responseType: 'arraybuffer',
-      });
+      }, { label: `/open-apis/im/v1/messages/${messageId}/resources/${fileKey}` });
       return Buffer.from(response.data);
     } catch (error) {
       const wrapped = new Error(`API failed: download message resource`);
