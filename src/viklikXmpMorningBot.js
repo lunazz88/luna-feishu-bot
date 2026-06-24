@@ -355,6 +355,19 @@ function isCrawlFailure(ad) {
   return valueToText(ad.crawlStatus).trim() !== '';
 }
 
+function hasMetricValue(row) {
+  const metrics = row.metrics || {};
+  return ['spend', 'impressions', 'clicks', 'registrations', 'firstDeposits']
+    .some((key) => metrics[key] !== null && metrics[key] !== undefined);
+}
+
+function isReviewableAdsRow(row) {
+  if (isCrawlFailure(row)) return true;
+  if (!row.projectNorm) return false;
+  if (row.codeStrong || row.shooterNorm) return true;
+  return hasMetricValue(row);
+}
+
 function indexRecords(records, keyFn) {
   const recordIndex = new Map();
   for (const record of records) {
@@ -823,7 +836,8 @@ async function writeAiMatchTable({ feishu, baseUrl, businessDate, xmpFilePath })
   const target = existingTarget || await createTargetMatchTable(feishu, appToken, source, businessDate);
 
   const projectRules = await loadProjectRules(feishu);
-  const adsRows = applyProjectRules(readAdsRows(feishu, xmpFilePath), projectRules);
+  const allAdsRows = applyProjectRules(readAdsRows(feishu, xmpFilePath), projectRules);
+  const adsRows = allAdsRows.filter(isReviewableAdsRow);
   const matched = matchAdsToRecords(adsRows, source.records);
   const matchByRecordId = new Map(matched.matches.map((match) => [match.record.recordId, match]));
   const assignedRecordIds = new Set(matched.matches.map((match) => match.record.recordId));
@@ -870,6 +884,7 @@ async function writeAiMatchTable({ feishu, baseUrl, businessDate, xmpFilePath })
     reviewApp,
     targetSyncMode: targetSync.mode,
     adsRows: adsRows.length,
+    ignoredAdsRows: allAdsRows.length - adsRows.length,
     sourceRows: source.records.length,
     matchedRows: matched.matches.length,
     writtenRows: targetSync.writtenRows,
@@ -949,6 +964,7 @@ async function handleTextMessage(message, text) {
         `目标表：${result.targetCreated ? '新建' : '复用并重写'}`,
         `投手表：${result.sourceTableName}`,
         `XMP数据：${result.adsRows} 条`,
+        `XMP空白项目行：${result.ignoredAdsRows} 条`,
         `投手表：${result.sourceRows} 条`,
         `匹配成功：${result.matchedRows} 条`,
         `抓取失败：${result.crawlFailureRows} 条`,
