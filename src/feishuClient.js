@@ -64,7 +64,7 @@ function isRetryableNetworkError(error) {
 }
 
 async function requestWithNetworkRetry(requestConfig, context = {}) {
-  const retries = context.retries ?? 4;
+  const retries = context.retries ?? Number(process.env.FEISHU_API_RETRIES || 8);
   const label = context.label || requestConfig.url || 'lark api';
 
   for (let attempt = 0; attempt <= retries; attempt += 1) {
@@ -73,7 +73,7 @@ async function requestWithNetworkRetry(requestConfig, context = {}) {
     } catch (error) {
       if (attempt >= retries || !isRetryableNetworkError(error)) throw error;
 
-      const delayMs = Math.min(1000 * 2 ** attempt, 8000);
+      const delayMs = Math.min(1000 * 2 ** attempt, 30000);
       console.log(JSON.stringify({
         event: 'lark_api_network_retry',
         label,
