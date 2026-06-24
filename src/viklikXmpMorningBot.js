@@ -494,18 +494,13 @@ async function ensureResultTable(feishu, appToken, tableName) {
   }
 
   if (!table) {
-    if (tables.length === 1) {
-      await feishu.renameTable(appToken, tables[0].table_id, tableName);
-      table = { ...tables[0], name: tableName };
-    } else {
-      table = await feishu.createTable(
-        appToken,
-        tableName,
-        [{ field_name: REVIEW_FIELDS[0], type: 1, ui_type: 'Text' }],
-        { defaultViewName: '表格' }
-      );
-      table.name = tableName;
-    }
+    table = await feishu.createTable(
+      appToken,
+      tableName,
+      [{ field_name: REVIEW_FIELDS[0], type: 1, ui_type: 'Text' }],
+      { defaultViewName: '表格' }
+    );
+    table.name = tableName;
     fields = await feishu.listFields(appToken, table.table_id);
   }
 
