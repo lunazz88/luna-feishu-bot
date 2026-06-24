@@ -41,11 +41,72 @@ const METRIC_FIELDS = {
   firstDeposits: '首存人数',
 };
 
-const REVIEW_FIELDS = [
+const REVIEW_TABLE_FIELDS = {
+  '抓取失败': [
+    '处理状态',
+    '项目',
+    'code',
+    '国家',
+    'XMP投手',
+    '晨报投手',
+    '抓取状态',
+    '花费金额',
+    '展示次数',
+    '点击量',
+    '注册人数',
+    '首存人数',
+    'XMP行号',
+    '晨报行号',
+  ],
+  '投手不一致': [
+    '处理状态',
+    '项目',
+    'code',
+    '国家',
+    'XMP投手',
+    '晨报投手',
+    '花费金额',
+    '展示次数',
+    '点击量',
+    '注册人数',
+    '首存人数',
+    'XMP行号',
+    '晨报行号',
+    '原因',
+  ],
+  'XMP有晨报没有': [
+    '处理状态',
+    '项目',
+    'code',
+    '国家',
+    'XMP投手',
+    '花费金额',
+    '展示次数',
+    '点击量',
+    '注册人数',
+    '首存人数',
+    'XMP行号',
+    '晨报行号',
+    '原因',
+  ],
+  '晨报有XMP没有': [
+    '处理状态',
+    '项目',
+    'code',
+    '国家',
+    '晨报投手',
+    '花费金额',
+    '展示次数',
+    '点击量',
+    '注册人数',
+    '首存人数',
+    '晨报行号',
+    '原因',
+  ],
+};
+
+const DEFAULT_REVIEW_FIELDS = [
   '处理状态',
-  '问题类型',
-  '处理建议',
-  '原因',
   '项目',
   'code',
   '国家',
@@ -58,6 +119,7 @@ const REVIEW_FIELDS = [
   '首存人数',
   'XMP行号',
   '晨报行号',
+  '原因',
 ];
 
 function parseJson(value) {
@@ -290,14 +352,7 @@ function isReviewableSourceRecord(row) {
 }
 
 function isCrawlFailure(ad) {
-  const text = [
-    ad.project,
-    ad.code,
-    ad.shooter,
-    ad.country,
-    ad.crawlStatus,
-  ].map(valueToText).join(' ');
-  return /无数据|抓取失败|失败/.test(text);
+  return valueToText(ad.crawlStatus).trim() !== '';
 }
 
 function indexRecords(records, keyFn) {
@@ -331,7 +386,7 @@ function matchAdsToRecords(adsRows, records) {
       crawlFailures.push({
         ad,
         candidates: projectCodeCountryCandidates,
-        reason: 'XMP原始数据标记为无数据/抓取失败，需先确认抓取状态',
+        reason: `XMP抓取状态非空：${valueToText(ad.crawlStatus)}`,
       });
       continue;
     }
@@ -482,11 +537,25 @@ async function createTargetMatchTable(feishu, appToken, source, businessDate) {
   };
 }
 
+function reviewFieldsFor(tableName) {
+  return REVIEW_TABLE_FIELDS[tableName] || DEFAULT_REVIEW_FIELDS;
+}
+
+function filterReviewRowsForTable(rows, tableName) {
+  const fieldNames = new Set(reviewFieldsFor(tableName));
+  return rows.map((row) => ({
+    fields: Object.fromEntries(
+      Object.entries(row.fields || {}).filter(([fieldName]) => fieldNames.has(fieldName))
+    ),
+  }));
+}
+
 async function ensureResultTable(feishu, appToken, tableName) {
+  const reviewFields = reviewFieldsFor(tableName);
   let tables = await feishu.listTables(appToken);
   let table = tables.find((item) => item.name === tableName);
   let fields = table ? await feishu.listFields(appToken, table.table_id) : [];
-  if (table && fields.some((field) => !REVIEW_FIELDS.includes(field.field_name))) {
+  if (table && fields.some((field) => !reviewFields.includes(field.field_name))) {
     await feishu.deleteTable(appToken, table.table_id);
     tables = await feishu.listTables(appToken);
     table = null;
@@ -497,7 +566,7 @@ async function ensureResultTable(feishu, appToken, tableName) {
     table = await feishu.createTable(
       appToken,
       tableName,
-      [{ field_name: REVIEW_FIELDS[0], type: 1, ui_type: 'Text' }],
+      [{ field_name: reviewFields[0], type: 1, ui_type: 'Text' }],
       { defaultViewName: '表格' }
     );
     table.name = tableName;
@@ -505,18 +574,18 @@ async function ensureResultTable(feishu, appToken, tableName) {
   }
 
   const existingNames = new Set(fields.map((field) => field.field_name));
-  if (!existingNames.has(REVIEW_FIELDS[0])) {
+  if (!existingNames.has(reviewFields[0])) {
     const primaryField = fields.find((field) => field.is_primary) || fields[0];
     if (primaryField) {
       await feishu.updateField(appToken, table.table_id, primaryField.field_id, {
-        field_name: REVIEW_FIELDS[0],
+        field_name: reviewFields[0],
         type: 1,
         ui_type: 'Text',
       });
-      existingNames.add(REVIEW_FIELDS[0]);
+      existingNames.add(reviewFields[0]);
     }
   }
-  for (const fieldName of REVIEW_FIELDS) {
+  for (const fieldName of reviewFields) {
     if (existingNames.has(fieldName)) continue;
     await feishu.createField(appToken, table.table_id, {
       field_name: fieldName,
@@ -539,7 +608,7 @@ async function deleteResultTableIfExists(feishu, appToken, tableName) {
 async function writeResultTable(feishu, appToken, tableName, rows) {
   const table = await ensureResultTable(feishu, appToken, tableName);
   const deletedRows = await clearTableRecords(feishu, appToken, table.table_id);
-  await feishu.batchCreateRecords(appToken, table.table_id, rows);
+  await feishu.batchCreateRecords(appToken, table.table_id, filterReviewRowsForTable(rows, tableName));
   return {
     tableName,
     tableId: table.table_id,
@@ -650,6 +719,7 @@ function reviewRecord({ status, type, suggestion, reason, ad = null, record = nu
       '国家': valueToText(country),
       'XMP投手': ad ? valueToText(ad.shooter) : '',
       '晨报投手': firstCandidate ? valueToText(firstCandidate.shooter) : '',
+      '抓取状态': ad ? valueToText(ad.crawlStatus) : '',
       '花费金额': ad ? metricText(ad.metrics, 'spend') : '',
       '展示次数': ad ? metricText(ad.metrics, 'impressions') : '',
       '点击量': ad ? metricText(ad.metrics, 'clicks') : '',
@@ -666,8 +736,8 @@ function crawlFailureReviewRows(items) {
     status: '待人工确认',
     type: '抓取失败',
     suggestion: item.candidates.length
-      ? '先确认XMP抓取是否确实失败；如有真实数据，再人工补入ai匹配表对应行'
-      : '先确认XMP是否漏抓；如晨报缺该项目，请补维护晨报/投手表',
+      ? '人工补抓后填入数值'
+      : '人工确认是否需新增晨报记录',
     reason: item.reason,
     ad: item.ad,
     candidates: item.candidates,
@@ -679,7 +749,7 @@ function shooterMismatchReviewRows(items) {
   return items.map((item) => reviewRecord({
     status: '待人工确认',
     type: '投手不一致',
-    suggestion: '核对XMP投手与晨报投手，以实际归属为准；确认后修正投手或手动补数',
+    suggestion: '确认以哪个投手为准',
     reason: item.reason,
     ad: item.ad,
     candidates: item.candidates,
@@ -691,7 +761,7 @@ function unmatchedReviewRows(items) {
   return items.map((item) => reviewRecord({
     status: '待人工确认',
     type: 'XMP有，晨报/投手表未匹配',
-    suggestion: '检查晨报是否缺项目、code、国家，或XMP命名是否异常；确认后补维护表或手动补数',
+    suggestion: '确认晨报是否缺记录',
     reason: item.reason,
     ad: item.ad,
     candidates: item.candidates || [],
@@ -703,8 +773,8 @@ function shooterOnlyReviewRows(records) {
   return records.map((record) => reviewRecord({
     status: '待人工确认',
     type: '晨报/投手表有，XMP没有',
-    suggestion: '确认是否停投、XMP漏抓，或项目/code/投手/国家维护不一致',
-    reason: '晨报/投手表有该记录，但XMP原始数据中没有可自动写入的匹配行',
+    suggestion: '确认XMP是否漏抓',
+    reason: '晨报有，XMP没有',
     record,
     candidates: [record],
     strategy: 'source_without_xmp',
