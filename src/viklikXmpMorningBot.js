@@ -46,24 +46,18 @@ const REVIEW_FIELDS = [
   '问题类型',
   '处理建议',
   '原因',
-  'XMP行号',
-  'XMP项目',
-  'XMP code',
+  '项目',
+  'code',
+  '国家',
   'XMP投手',
-  'XMP国家',
-  'XMP花费',
-  'XMP展示次数',
-  'XMP点击量',
-  'XMP注册人数',
-  'XMP首存人数',
-  '晨报行号',
-  '晨报项目',
-  '晨报 code',
   '晨报投手',
-  '晨报国家',
-  '候选数量',
-  '候选摘要',
-  '匹配策略',
+  '花费金额',
+  '展示次数',
+  '点击量',
+  '注册人数',
+  '首存人数',
+  'XMP行号',
+  '晨报行号',
 ];
 
 function parseJson(value) {
@@ -212,8 +206,20 @@ function projectCodeCountryKey(row) {
   return [row.projectNorm, row.codeStrong, row.countryNorm].join('\u0001');
 }
 
-function hasUsableKey(key) {
-  return Boolean(String(key || '').replace(/\u0001/g, ''));
+function hasExactMatchParts(row) {
+  return Boolean(row.projectNorm && row.codeStrong && row.shooterNorm && row.countryNorm);
+}
+
+function hasProjectCodeCountryParts(row) {
+  return Boolean(row.projectNorm && row.codeStrong && row.countryNorm);
+}
+
+function isGroupingOnlyRecord(row) {
+  return Boolean(row.projectNorm && !row.codeStrong && !row.shooterNorm && !row.countryNorm);
+}
+
+function isReviewableSourceRecord(row) {
+  return Boolean(row.projectNorm) && !isGroupingOnlyRecord(row);
 }
 
 function isCrawlFailure(ad) {
@@ -230,8 +236,9 @@ function isCrawlFailure(ad) {
 function indexRecords(records, keyFn) {
   const recordIndex = new Map();
   for (const record of records) {
+    if (keyFn === matchKey && !hasExactMatchParts(record)) continue;
+    if (keyFn === projectCodeCountryKey && !hasProjectCodeCountryParts(record)) continue;
     const key = keyFn(record);
-    if (!hasUsableKey(key)) continue;
     if (!recordIndex.has(key)) recordIndex.set(key, []);
     recordIndex.get(key).push(record);
   }
@@ -409,8 +416,16 @@ async function createTargetMatchTable(feishu, appToken, source, businessDate) {
 }
 
 async function ensureResultTable(feishu, appToken, tableName) {
-  const tables = await feishu.listTables(appToken);
+  let tables = await feishu.listTables(appToken);
   let table = tables.find((item) => item.name === tableName);
+  let fields = table ? await feishu.listFields(appToken, table.table_id) : [];
+  if (table && fields.some((field) => !REVIEW_FIELDS.includes(field.field_name))) {
+    await feishu.deleteTable(appToken, table.table_id);
+    tables = await feishu.listTables(appToken);
+    table = null;
+    fields = [];
+  }
+
   if (!table) {
     if (tables.length === 1) {
       await feishu.renameTable(appToken, tables[0].table_id, tableName);
@@ -424,9 +439,9 @@ async function ensureResultTable(feishu, appToken, tableName) {
       );
       table.name = tableName;
     }
+    fields = await feishu.listFields(appToken, table.table_id);
   }
 
-  const fields = await feishu.listFields(appToken, table.table_id);
   const existingNames = new Set(fields.map((field) => field.field_name));
   if (!existingNames.has(REVIEW_FIELDS[0])) {
     const primaryField = fields.find((field) => field.is_primary) || fields[0];
@@ -449,6 +464,14 @@ async function ensureResultTable(feishu, appToken, tableName) {
     existingNames.add(fieldName);
   }
   return table;
+}
+
+async function deleteResultTableIfExists(feishu, appToken, tableName) {
+  const tables = await feishu.listTables(appToken);
+  const table = tables.find((item) => item.name === tableName);
+  if (!table) return false;
+  await feishu.deleteTable(appToken, table.table_id);
+  return true;
 }
 
 async function writeResultTable(feishu, appToken, tableName, rows) {
@@ -549,54 +572,31 @@ function metricText(metrics, key) {
   return value === undefined || value === null ? '' : String(value);
 }
 
-function candidateSummary(candidates) {
-  return (candidates || [])
-    .slice(0, 5)
-    .map((record) => `${record.position || ''} ${record.project || ''} / ${record.code || ''} / ${record.shooter || ''} / ${record.country || ''}`.trim())
-    .join('\n');
-}
-
 function reviewRecord({ status, type, suggestion, reason, ad = null, record = null, candidates = [], strategy = '' }) {
   const firstCandidate = record || (candidates && candidates[0]) || null;
+  const project = ad ? ad.project : firstCandidate ? firstCandidate.project : '';
+  const code = ad ? ad.code : firstCandidate ? firstCandidate.code : '';
+  const country = ad ? ad.country : firstCandidate ? firstCandidate.country : '';
   return {
     fields: {
       '处理状态': status,
       '问题类型': type,
       '处理建议': suggestion,
       '原因': reason,
-      'XMP行号': ad ? String(ad.sourceRow || '') : '',
-      'XMP项目': ad ? valueToText(ad.project) : '',
-      'XMP code': ad ? valueToText(ad.code) : '',
+      '项目': valueToText(project),
+      'code': valueToText(code),
+      '国家': valueToText(country),
       'XMP投手': ad ? valueToText(ad.shooter) : '',
-      'XMP国家': ad ? valueToText(ad.country) : '',
-      'XMP花费': ad ? metricText(ad.metrics, 'spend') : '',
-      'XMP展示次数': ad ? metricText(ad.metrics, 'impressions') : '',
-      'XMP点击量': ad ? metricText(ad.metrics, 'clicks') : '',
-      'XMP注册人数': ad ? metricText(ad.metrics, 'registrations') : '',
-      'XMP首存人数': ad ? metricText(ad.metrics, 'firstDeposits') : '',
-      '晨报行号': firstCandidate ? String(firstCandidate.position || '') : '',
-      '晨报项目': firstCandidate ? valueToText(firstCandidate.project) : '',
-      '晨报 code': firstCandidate ? valueToText(firstCandidate.code) : '',
       '晨报投手': firstCandidate ? valueToText(firstCandidate.shooter) : '',
-      '晨报国家': firstCandidate ? valueToText(firstCandidate.country) : '',
-      '候选数量': String((candidates && candidates.length) || (record ? 1 : 0)),
-      '候选摘要': candidateSummary(candidates && candidates.length ? candidates : record ? [record] : []),
-      '匹配策略': strategy,
+      '花费金额': ad ? metricText(ad.metrics, 'spend') : '',
+      '展示次数': ad ? metricText(ad.metrics, 'impressions') : '',
+      '点击量': ad ? metricText(ad.metrics, 'clicks') : '',
+      '注册人数': ad ? metricText(ad.metrics, 'registrations') : '',
+      '首存人数': ad ? metricText(ad.metrics, 'firstDeposits') : '',
+      'XMP行号': ad ? String(ad.sourceRow || '') : '',
+      '晨报行号': firstCandidate ? String(firstCandidate.position || '') : '',
     },
   };
-}
-
-function matchedReviewRows(matches) {
-  return matches.map((match) => reviewRecord({
-    status: '已自动写入',
-    type: '匹配成功',
-    suggestion: '无需处理；已写入ai匹配表',
-    reason: '项目+code+投手+国家唯一一致',
-    ad: match.ad,
-    record: match.record,
-    candidates: [match.record],
-    strategy: match.strategy,
-  }));
 }
 
 function crawlFailureReviewRows(items) {
@@ -660,6 +660,30 @@ function buildMatchRecord(sourceRecord, sourceFields, matchByRecordId) {
   return record;
 }
 
+async function syncMatchTableRecords(feishu, appToken, target, targetRecords) {
+  const existingRecords = await feishu.listRecords(appToken, target.table_id);
+  if (existingRecords.length === targetRecords.length) {
+    const updates = targetRecords.map((record, index) => ({
+      record_id: existingRecords[index].record_id,
+      fields: record.fields,
+    }));
+    await feishu.batchUpdateRecords(appToken, target.table_id, updates);
+    return {
+      mode: 'update_existing_rows',
+      deletedRows: 0,
+      writtenRows: updates.length,
+    };
+  }
+
+  const deletedRows = await clearTableRecords(feishu, appToken, target.table_id);
+  await feishu.batchCreateRecords(appToken, target.table_id, targetRecords);
+  return {
+    mode: 'recreate_rows',
+    deletedRows,
+    writtenRows: targetRecords.length,
+  };
+}
+
 async function writeAiMatchTable({ feishu, baseUrl, businessDate, xmpFilePath }) {
   const appToken = await feishu.resolveBitableAppToken(baseUrl);
   const source = await findShooterSource(feishu, appToken, baseUrl, businessDate);
@@ -679,24 +703,23 @@ async function writeAiMatchTable({ feishu, baseUrl, businessDate, xmpFilePath })
   for (const item of matched.duplicateRecords) {
     for (const candidate of item.candidates) assignedRecordIds.add(candidate.recordId);
   }
-  const shooterOnlyRecords = source.records.filter((record) => !assignedRecordIds.has(record.recordId));
+  const shooterOnlyRecords = source.records.filter((record) => isReviewableSourceRecord(record) && !assignedRecordIds.has(record.recordId));
 
   const targetRecords = source.rawRecords.map((record) => buildMatchRecord(record, source.fields, matchByRecordId));
-  const deletedRows = await clearTableRecords(feishu, appToken, target.table_id);
-  await feishu.batchCreateRecords(appToken, target.table_id, targetRecords);
+  const targetSync = await syncMatchTableRecords(feishu, appToken, target, targetRecords);
   const reviewApp = await ensureReviewApp(feishu, baseUrl, businessDate);
+  await deleteResultTableIfExists(feishu, reviewApp.appToken, '匹配成功');
   const duplicateReviewRows = unmatchedReviewRows(matched.duplicateRecords.map((item) => ({
     ...item,
     reason: item.reason,
   })));
   const resultTables = {
-    matched: await writeResultTable(feishu, reviewApp.appToken, '匹配成功', matchedReviewRows(matched.matches)),
     crawlFailure: await writeResultTable(feishu, reviewApp.appToken, '抓取失败', crawlFailureReviewRows(matched.crawlFailures)),
     shooterMismatch: await writeResultTable(feishu, reviewApp.appToken, '投手不一致', shooterMismatchReviewRows(matched.shooterMismatches)),
     unmatched: await writeResultTable(
       feishu,
       reviewApp.appToken,
-      '未匹配',
+      'XMP有晨报没有',
       [...unmatchedReviewRows(matched.unmatched), ...duplicateReviewRows]
     ),
     shooterOnly: await writeResultTable(feishu, reviewApp.appToken, '晨报有XMP没有', shooterOnlyReviewRows(shooterOnlyRecords)),
@@ -712,11 +735,12 @@ async function writeAiMatchTable({ feishu, baseUrl, businessDate, xmpFilePath })
     viewReplica: target.viewReplica || null,
     targetUrl: tableUrlFromAppToken(baseUrl, appToken, target.table_id),
     reviewApp,
+    targetSyncMode: targetSync.mode,
     adsRows: adsRows.length,
     sourceRows: source.records.length,
     matchedRows: matched.matches.length,
-    writtenRows: targetRecords.length,
-    deletedRows,
+    writtenRows: targetSync.writtenRows,
+    deletedRows: targetSync.deletedRows,
     unmatchedRows: matched.unmatched.length,
     crawlFailureRows: matched.crawlFailures.length,
     shooterMismatchRows: matched.shooterMismatches.length,

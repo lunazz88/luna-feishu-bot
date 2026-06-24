@@ -475,13 +475,14 @@ class FeishuClient {
     return { existing, created, updated, skipped };
   }
 
-  async listRecords(appToken, tableId) {
+  async listRecords(appToken, tableId, options = {}) {
     const records = [];
     let pageToken;
+    const pageSize = options.pageSize || Number(process.env.FEISHU_RECORD_PAGE_SIZE || 100);
     do {
       const data = await this.request(
         `/open-apis/bitable/v1/apps/${encodeURIComponent(appToken)}/tables/${encodeURIComponent(tableId)}/records`,
-        { method: 'GET', params: { page_size: 20, page_token: pageToken } }
+        { method: 'GET', params: { page_size: pageSize, page_token: pageToken } }
       );
       records.push(...(data.items || []));
       pageToken = data.has_more ? data.page_token : undefined;
@@ -713,6 +714,15 @@ class FeishuClient {
       }
     );
     return data.field || data;
+  }
+
+  async deleteField(appToken, tableId, fieldId) {
+    return this.request(
+      `/open-apis/bitable/v1/apps/${encodeURIComponent(appToken)}/tables/${encodeURIComponent(tableId)}/fields/${encodeURIComponent(fieldId)}`,
+      {
+        method: 'DELETE',
+      }
+    );
   }
 
   async deleteTable(appToken, tableId) {
