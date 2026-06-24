@@ -43,7 +43,6 @@ const METRIC_FIELDS = {
 
 const REVIEW_TABLE_FIELDS = {
   '抓取失败': [
-    '处理状态',
     '项目',
     'code',
     'XMP原始code',
@@ -61,7 +60,6 @@ const REVIEW_TABLE_FIELDS = {
     '晨报行号',
   ],
   '投手不一致': [
-    '处理状态',
     '项目',
     'code',
     'XMP原始code',
@@ -79,7 +77,6 @@ const REVIEW_TABLE_FIELDS = {
     '原因',
   ],
   'XMP有晨报没有': [
-    '处理状态',
     '项目',
     'code',
     'XMP原始code',
@@ -96,7 +93,6 @@ const REVIEW_TABLE_FIELDS = {
     '原因',
   ],
   '晨报有XMP没有': [
-    '处理状态',
     '项目',
     'code',
     '国家',
@@ -112,7 +108,6 @@ const REVIEW_TABLE_FIELDS = {
 };
 
 const DEFAULT_REVIEW_FIELDS = [
-  '处理状态',
   '项目',
   'code',
   'XMP原始code',
@@ -884,14 +879,13 @@ function metricText(metrics, key) {
   return value === undefined || value === null ? '' : String(value);
 }
 
-function reviewRecord({ status, type, suggestion, reason, ad = null, record = null, candidates = [], strategy = '' }) {
+function reviewRecord({ type, suggestion, reason, ad = null, record = null, candidates = [], strategy = '' }) {
   const firstCandidate = record || (candidates && candidates[0]) || null;
   const project = ad ? ad.project : firstCandidate ? firstCandidate.project : '';
   const code = ad ? ad.code : firstCandidate ? firstCandidate.code : '';
   const country = ad ? ad.country : firstCandidate ? firstCandidate.country : '';
   return {
     fields: {
-      '处理状态': status,
       '问题类型': type,
       '处理建议': suggestion,
       '原因': reason,
@@ -916,7 +910,6 @@ function reviewRecord({ status, type, suggestion, reason, ad = null, record = nu
 
 function crawlFailureReviewRows(items) {
   return items.map((item) => reviewRecord({
-    status: '待人工确认',
     type: '抓取失败',
     suggestion: item.candidates.length
       ? '人工补抓后填入数值'
@@ -930,7 +923,6 @@ function crawlFailureReviewRows(items) {
 
 function shooterMismatchReviewRows(items) {
   return items.map((item) => reviewRecord({
-    status: '待人工确认',
     type: '投手不一致',
     suggestion: '确认以哪个投手为准',
     reason: item.reason,
@@ -942,7 +934,6 @@ function shooterMismatchReviewRows(items) {
 
 function unmatchedReviewRows(items) {
   return items.map((item) => reviewRecord({
-    status: '待人工确认',
     type: 'XMP有，晨报/投手表未匹配',
     suggestion: '确认晨报是否缺记录',
     reason: item.reason,
@@ -954,7 +945,6 @@ function unmatchedReviewRows(items) {
 
 function shooterOnlyReviewRows(records) {
   return records.map((record) => reviewRecord({
-    status: '待人工确认',
     type: '晨报/投手表有，XMP没有',
     suggestion: '确认XMP是否漏抓',
     reason: '晨报有，XMP没有',
