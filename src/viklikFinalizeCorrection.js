@@ -64,7 +64,7 @@ function targetRecordToNormalized(record, index) {
 }
 
 function matchKey(row) {
-  return [row.projectNorm, row.codeStrong, row.shooterNorm, row.countryNorm].join('\u0001');
+  return [row.projectNorm, row.codeStrong, row.shooterNorm].join('\u0001');
 }
 
 function metricUpdates(row) {

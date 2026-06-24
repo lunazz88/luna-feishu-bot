@@ -473,11 +473,11 @@ function applyCodeRules(adsRows, codeRules) {
 }
 
 function matchKey(row) {
-  return [row.projectNorm, row.codeStrong, row.shooterNorm, row.countryNorm].join('\u0001');
+  return [row.projectNorm, row.codeStrong, row.shooterNorm].join('\u0001');
 }
 
-function projectCodeCountryKey(row) {
-  return [row.projectNorm, row.codeStrong, row.countryNorm].join('\u0001');
+function projectCodeOnlyKey(row) {
+  return [row.projectNorm, row.codeStrong].join('\u0001');
 }
 
 function projectCodeKey(row) {
@@ -485,11 +485,11 @@ function projectCodeKey(row) {
 }
 
 function hasExactMatchParts(row) {
-  return Boolean(row.projectNorm && row.codeStrong && row.shooterNorm && row.countryNorm);
+  return Boolean(row.projectNorm && row.codeStrong && row.shooterNorm);
 }
 
-function hasProjectCodeCountryParts(row) {
-  return Boolean(row.projectNorm && row.codeStrong && row.countryNorm);
+function hasProjectCodeOnlyParts(row) {
+  return Boolean(row.projectNorm && row.codeStrong);
 }
 
 function isGroupingOnlyRecord(row) {
@@ -531,7 +531,7 @@ function indexRecords(records, keyFn) {
   const recordIndex = new Map();
   for (const record of records) {
     if (keyFn === matchKey && !hasExactMatchParts(record)) continue;
-    if (keyFn === projectCodeCountryKey && !hasProjectCodeCountryParts(record)) continue;
+    if (keyFn === projectCodeOnlyKey && !hasProjectCodeOnlyParts(record)) continue;
     const key = keyFn(record);
     if (!recordIndex.has(key)) recordIndex.set(key, []);
     recordIndex.get(key).push(record);
@@ -541,7 +541,7 @@ function indexRecords(records, keyFn) {
 
 function matchAdsToRecords(adsRows, records) {
   const exactIndex = indexRecords(records, matchKey);
-  const projectCodeCountryIndex = indexRecords(records, projectCodeCountryKey);
+  const projectCodeIndex = indexRecords(records, projectCodeOnlyKey);
   const matches = [];
   const unmatched = [];
   const crawlFailures = [];
@@ -550,14 +550,14 @@ function matchAdsToRecords(adsRows, records) {
 
   for (const ad of adsRows) {
     const key = matchKey(ad);
-    const projectCodeCountry = projectCodeCountryKey(ad);
+    const projectCode = projectCodeOnlyKey(ad);
     const candidates = exactIndex.get(key) || [];
-    const projectCodeCountryCandidates = projectCodeCountryIndex.get(projectCodeCountry) || [];
+    const projectCodeCandidates = projectCodeIndex.get(projectCode) || [];
 
     if (isCrawlFailure(ad)) {
       crawlFailures.push({
         ad,
-        candidates: projectCodeCountryCandidates,
+        candidates: projectCodeCandidates,
         reason: `XMP抓取状态非空：${valueToText(ad.crawlStatus)}`,
       });
       continue;
@@ -573,24 +573,24 @@ function matchAdsToRecords(adsRows, records) {
     }
 
     if (candidates.length === 1) {
-      matches.push({ ad, record: candidates[0], strategy: 'project+standard_user+shooter+country' });
+      matches.push({ ad, record: candidates[0], strategy: 'project+standard_user+shooter' });
     } else if (candidates.length > 1) {
       duplicateRecords.push({
         ad,
         candidates,
-        reason: '晨报/投手表存在多条相同 项目+标准用户名+投手+国家，无法自动判断唯一记录',
+        reason: '晨报/投手表存在多条相同 项目+标准用户名+投手，无法自动判断唯一记录',
       });
-    } else if (projectCodeCountryCandidates.length) {
+    } else if (projectCodeCandidates.length) {
       shooterMismatches.push({
         ad,
-        candidates: projectCodeCountryCandidates,
-        reason: '项目+标准用户名+国家一致，但投手不一致',
+        candidates: projectCodeCandidates,
+        reason: '项目+标准用户名一致，但投手不一致',
       });
     } else {
       unmatched.push({
         ad,
         candidates: [],
-        reason: 'XMP有该行，但晨报/投手表中找不到相同 项目+标准用户名+国家',
+        reason: 'XMP有该行，但晨报/投手表中找不到相同 项目+标准用户名',
       });
     }
   }
