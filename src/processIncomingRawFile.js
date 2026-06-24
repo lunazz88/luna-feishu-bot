@@ -241,7 +241,7 @@ async function createReplicatedTable(feishu, baseUrl, source, tableName) {
   const tables = await feishu.listTables(appToken);
   const outputName = uniqueTableName(tables, tableName);
   const target = await createCorrectionTable(feishu, appToken, source, outputName);
-  const viewReplica = await feishu.ensureGridViews(appToken, target.table_id, config.resultViewNames);
+  const viewReplica = await feishu.ensureClassifiedGridViews(appToken, target.table_id, config.resultViewNames);
   return {
     appToken,
     tableId: target.table_id,

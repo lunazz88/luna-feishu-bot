@@ -235,7 +235,7 @@ async function createTableLikeSource(feishu, targetAppToken, source, wantedName)
     fieldIdMap.set(field.field_id, createdField.field_id);
   }
 
-  await feishu.ensureGridViews(targetAppToken, created.table_id, config.resultViewNames);
+  await feishu.ensureClassifiedGridViews(targetAppToken, created.table_id, config.resultViewNames);
   await feishu.grantResultChatEdit(targetAppToken);
   return feishu.readBitableTable(targetAppToken, created.table_id);
 }

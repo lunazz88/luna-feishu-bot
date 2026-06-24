@@ -302,6 +302,46 @@ class FeishuClient {
     return data.view || data;
   }
 
+  async patchView(appToken, tableId, viewId, data) {
+    const result = await this.request(
+      `/open-apis/bitable/v1/apps/${encodeURIComponent(appToken)}/tables/${encodeURIComponent(tableId)}/views/${encodeURIComponent(viewId)}`,
+      {
+        method: 'PATCH',
+        data,
+      }
+    );
+    return result.view || result;
+  }
+
+  normalizeLookupName(name) {
+    return valueToText(name).replace(/\s+/g, '').toLowerCase();
+  }
+
+  resultViewSortFieldNames(viewName) {
+    const normalized = this.normalizeLookupName(viewName);
+    if (!normalized || normalized === '所有项目' || normalized === '全部项目') return [];
+    if (normalized.includes('投手')) return ['投手'];
+    if (normalized.includes('国家')) return ['国家'];
+    if (normalized.includes('项目')) return ['项目', '项目名称'];
+    return [];
+  }
+
+  findFieldByNames(fields, names) {
+    const byExactName = new Map(fields.map((field) => [field.field_name, field]));
+    for (const name of names) {
+      if (byExactName.has(name)) return byExactName.get(name);
+    }
+
+    const byNormalizedName = new Map(
+      fields.map((field) => [this.normalizeLookupName(field.field_name), field])
+    );
+    for (const name of names) {
+      const field = byNormalizedName.get(this.normalizeLookupName(name));
+      if (field) return field;
+    }
+    return null;
+  }
+
   async ensureGridViews(appToken, tableId, viewNames) {
     const existing = await this.listViews(appToken, tableId);
     const existingNames = new Set(existing.map((view) => view.view_name));
@@ -313,6 +353,64 @@ class FeishuClient {
       existingNames.add(viewName);
     }
     return { existing, created };
+  }
+
+  async ensureClassifiedGridViews(appToken, tableId, viewNames) {
+    const existing = await this.listViews(appToken, tableId);
+    const existingByName = new Map(existing.map((view) => [view.view_name, view]));
+    const fields = await this.listFields(appToken, tableId);
+    const created = [];
+    const updated = [];
+    const skipped = [];
+
+    for (const viewName of viewNames) {
+      let view = existingByName.get(viewName);
+      if (!view) {
+        view = await this.createView(appToken, tableId, viewName, 'grid');
+        created.push(view);
+        existingByName.set(viewName, view);
+      }
+
+      const fieldNames = this.resultViewSortFieldNames(viewName);
+      if (!fieldNames.length) continue;
+
+      const field = this.findFieldByNames(fields, fieldNames);
+      if (!field) {
+        skipped.push({
+          viewName,
+          reason: `缺少分类排序字段：${fieldNames.join('/')}`,
+        });
+        continue;
+      }
+
+      const currentSorts = view.property
+        && view.property.sort_info
+        && Array.isArray(view.property.sort_info.sorts)
+        ? view.property.sort_info.sorts
+        : [];
+      const currentFieldId = currentSorts[0] && currentSorts[0].field_id;
+      if (currentFieldId === field.field_id) continue;
+
+      const patched = await this.patchView(appToken, tableId, view.view_id, {
+        property: {
+          sort_info: {
+            sorts: [
+              {
+                field_id: field.field_id,
+                desc: false,
+              },
+            ],
+          },
+        },
+      });
+      updated.push({
+        viewName,
+        fieldName: field.field_name,
+        view: patched,
+      });
+    }
+
+    return { existing, created, updated, skipped };
   }
 
   async listRecords(appToken, tableId) {
