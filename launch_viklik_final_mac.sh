@@ -35,6 +35,14 @@ cat > "$PLIST" <<PLIST
     <string>$PROJECT_DIR/.env.viklik.robot1</string>
     <key>CODEX_PYTHON_EXE</key>
     <string>$PROJECT_DIR/.venv/bin/python</string>
+    <key>HTTPS_PROXY</key>
+    <string></string>
+    <key>HTTP_PROXY</key>
+    <string></string>
+    <key>ALL_PROXY</key>
+    <string></string>
+    <key>NO_PROXY</key>
+    <string>*</string>
   </dict>
   <key>RunAtLoad</key>
   <true/>
