@@ -543,6 +543,26 @@ class FeishuClient {
     return { copiedAppToken, copiedUrl: this.copiedUrl(copiedAppToken, sourceUrl), raw: data };
   }
 
+  async createBitable(name, options = {}) {
+    const folderToken = options.folderToken || this.config.outputFolderToken || await this.rootFolderToken();
+    const data = await this.request('/open-apis/bitable/v1/apps', {
+      method: 'POST',
+      data: {
+        name,
+        folder_token: folderToken,
+      },
+    });
+    const app = data.app || data;
+    const appToken = app.app_token || data.app_token;
+    if (!appToken) throw new Error(`Create bitable succeeded but app token was not recognized: ${JSON.stringify(data)}`);
+    return {
+      appToken,
+      defaultTableId: app.default_table_id || data.default_table_id || '',
+      url: app.url || this.copiedUrl(appToken, options.sourceUrl || this.config.shooterBaseUrl),
+      raw: data,
+    };
+  }
+
   async setTenantEditable(appToken) {
     return this.request(`/open-apis/drive/v1/permissions/${encodeURIComponent(appToken)}/public`, {
       method: 'PATCH',

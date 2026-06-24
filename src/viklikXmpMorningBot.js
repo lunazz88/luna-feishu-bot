@@ -15,6 +15,7 @@ const Lark = require(path.join(config.nodeModulesDir, '@larksuiteoapi/node-sdk')
 
 const cacheRoot = path.join(process.cwd(), 'outputs', 'viklik-xmp');
 const fileRegistryPath = path.join(cacheRoot, 'xmp-file-registry.json');
+const reviewAppRegistryPath = path.join(cacheRoot, 'review-app-registry.json');
 const processedMessageIds = new Set();
 
 const FIELD = {
@@ -132,6 +133,25 @@ function loadRegistry() {
 function saveRegistry(registry) {
   fs.mkdirSync(cacheRoot, { recursive: true });
   fs.writeFileSync(fileRegistryPath, JSON.stringify(registry, null, 2));
+}
+
+function loadReviewAppRegistry() {
+  if (!fs.existsSync(reviewAppRegistryPath)) return { appsByDate: {} };
+  return JSON.parse(fs.readFileSync(reviewAppRegistryPath, 'utf8'));
+}
+
+function saveReviewAppRegistry(registry) {
+  fs.mkdirSync(cacheRoot, { recursive: true });
+  fs.writeFileSync(reviewAppRegistryPath, JSON.stringify(registry, null, 2));
+}
+
+function rememberReviewApp(businessDate, entry) {
+  const registry = loadReviewAppRegistry();
+  registry.appsByDate[businessDate] = {
+    ...entry,
+    updatedAt: new Date().toISOString(),
+  };
+  saveReviewAppRegistry(registry);
 }
 
 function rememberFile(entry) {
@@ -392,18 +412,34 @@ async function ensureResultTable(feishu, appToken, tableName) {
   const tables = await feishu.listTables(appToken);
   let table = tables.find((item) => item.name === tableName);
   if (!table) {
-    table = await feishu.createTable(
-      appToken,
-      tableName,
-      [{ field_name: REVIEW_FIELDS[0], type: 1, ui_type: 'Text' }],
-      { defaultViewName: '表格' }
-    );
-    table.name = tableName;
+    if (tables.length === 1) {
+      await feishu.renameTable(appToken, tables[0].table_id, tableName);
+      table = { ...tables[0], name: tableName };
+    } else {
+      table = await feishu.createTable(
+        appToken,
+        tableName,
+        [{ field_name: REVIEW_FIELDS[0], type: 1, ui_type: 'Text' }],
+        { defaultViewName: '表格' }
+      );
+      table.name = tableName;
+    }
   }
 
   const fields = await feishu.listFields(appToken, table.table_id);
   const existingNames = new Set(fields.map((field) => field.field_name));
-  for (const fieldName of REVIEW_FIELDS.slice(1)) {
+  if (!existingNames.has(REVIEW_FIELDS[0])) {
+    const primaryField = fields.find((field) => field.is_primary) || fields[0];
+    if (primaryField) {
+      await feishu.updateField(appToken, table.table_id, primaryField.field_id, {
+        field_name: REVIEW_FIELDS[0],
+        type: 1,
+        ui_type: 'Text',
+      });
+      existingNames.add(REVIEW_FIELDS[0]);
+    }
+  }
+  for (const fieldName of REVIEW_FIELDS) {
     if (existingNames.has(fieldName)) continue;
     await feishu.createField(appToken, table.table_id, {
       field_name: fieldName,
@@ -424,6 +460,51 @@ async function writeResultTable(feishu, appToken, tableName, rows) {
     tableId: table.table_id,
     rows: rows.length,
     deletedRows,
+  };
+}
+
+function reviewAppName(businessDate) {
+  return `${paddedDateLabel(businessDate)}-ai匹配核对表`;
+}
+
+function reviewAppUrl(baseUrl, appToken) {
+  const domain = new URL(baseUrl).hostname;
+  return `https://${domain}/base/${appToken}`;
+}
+
+async function ensureReviewApp(feishu, baseUrl, businessDate) {
+  const registry = loadReviewAppRegistry();
+  const existing = registry.appsByDate[businessDate];
+  if (existing && existing.appToken) {
+    try {
+      await feishu.listTables(existing.appToken);
+      return {
+        ...existing,
+        created: false,
+      };
+    } catch (error) {
+      logStep({
+        event: 'review_app_registry_stale',
+        businessDate,
+        details: error.details || { message: error.message },
+      });
+    }
+  }
+
+  const name = reviewAppName(businessDate);
+  const created = await feishu.createBitable(name, { sourceUrl: baseUrl });
+  await feishu.setTenantEditable(created.appToken);
+  await feishu.grantResultChatEdit(created.appToken);
+  const entry = {
+    appToken: created.appToken,
+    name,
+    url: created.url || reviewAppUrl(baseUrl, created.appToken),
+    defaultTableId: created.defaultTableId,
+  };
+  rememberReviewApp(businessDate, entry);
+  return {
+    ...entry,
+    created: true,
   };
 }
 
@@ -603,22 +684,22 @@ async function writeAiMatchTable({ feishu, baseUrl, businessDate, xmpFilePath })
   const targetRecords = source.rawRecords.map((record) => buildMatchRecord(record, source.fields, matchByRecordId));
   const deletedRows = await clearTableRecords(feishu, appToken, target.table_id);
   await feishu.batchCreateRecords(appToken, target.table_id, targetRecords);
-  const datePrefix = paddedDateLabel(businessDate);
+  const reviewApp = await ensureReviewApp(feishu, baseUrl, businessDate);
   const duplicateReviewRows = unmatchedReviewRows(matched.duplicateRecords.map((item) => ({
     ...item,
     reason: item.reason,
   })));
   const resultTables = {
-    matched: await writeResultTable(feishu, appToken, `${datePrefix}-匹配成功`, matchedReviewRows(matched.matches)),
-    crawlFailure: await writeResultTable(feishu, appToken, `${datePrefix}-抓取失败`, crawlFailureReviewRows(matched.crawlFailures)),
-    shooterMismatch: await writeResultTable(feishu, appToken, `${datePrefix}-投手不一致`, shooterMismatchReviewRows(matched.shooterMismatches)),
+    matched: await writeResultTable(feishu, reviewApp.appToken, '匹配成功', matchedReviewRows(matched.matches)),
+    crawlFailure: await writeResultTable(feishu, reviewApp.appToken, '抓取失败', crawlFailureReviewRows(matched.crawlFailures)),
+    shooterMismatch: await writeResultTable(feishu, reviewApp.appToken, '投手不一致', shooterMismatchReviewRows(matched.shooterMismatches)),
     unmatched: await writeResultTable(
       feishu,
-      appToken,
-      `${datePrefix}-未匹配`,
+      reviewApp.appToken,
+      '未匹配',
       [...unmatchedReviewRows(matched.unmatched), ...duplicateReviewRows]
     ),
-    shooterOnly: await writeResultTable(feishu, appToken, `${datePrefix}-晨报有XMP没有`, shooterOnlyReviewRows(shooterOnlyRecords)),
+    shooterOnly: await writeResultTable(feishu, reviewApp.appToken, '晨报有XMP没有', shooterOnlyReviewRows(shooterOnlyRecords)),
   };
 
   return {
@@ -630,6 +711,7 @@ async function writeAiMatchTable({ feishu, baseUrl, businessDate, xmpFilePath })
     targetCreated: !!target.created,
     viewReplica: target.viewReplica || null,
     targetUrl: tableUrlFromAppToken(baseUrl, appToken, target.table_id),
+    reviewApp,
     adsRows: adsRows.length,
     sourceRows: source.records.length,
     matchedRows: matched.matches.length,
@@ -719,6 +801,8 @@ async function handleTextMessage(message, text) {
         `清空旧记录：${result.deletedRows} 条`,
         `写入ai匹配表：${result.writtenRows} 条`,
         result.targetUrl,
+        `核对表：${result.reviewApp.name}`,
+        result.reviewApp.url,
       ].join('\n')
     );
   } catch (error) {
