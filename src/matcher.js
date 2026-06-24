@@ -44,7 +44,7 @@ function cleanCode(value) {
 }
 
 function strongCode(value) {
-  let text = cleanCode(value).replace(/code/g, '');
+  let text = cleanCode(value).replace(/code/g, '').replace(/[^a-z0-9]/g, '');
   if (/^\d+$/.test(text)) text = String(Number(text));
   return text;
 }
