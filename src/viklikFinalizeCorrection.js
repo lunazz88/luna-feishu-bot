@@ -6,6 +6,7 @@ const { normalizeCommon, valueToNumber, valueToText } = require('./matcher');
 
 const cacheRoot = path.join(process.cwd(), 'outputs', 'viklik-xmp');
 const reviewAppRegistryPath = path.join(cacheRoot, 'review-app-registry.json');
+const fileRegistryPath = path.join(cacheRoot, 'xmp-file-registry.json');
 
 const METRIC_FIELDS = ['花费金额', '展示次数', '点击量', '注册人数', '首存人数'];
 
@@ -27,6 +28,26 @@ function targetMatchTableName(businessDate) {
 function loadReviewAppRegistry() {
   if (!fs.existsSync(reviewAppRegistryPath)) return { appsByDate: {} };
   return JSON.parse(fs.readFileSync(reviewAppRegistryPath, 'utf8'));
+}
+
+function loadFileRegistry() {
+  if (!fs.existsSync(fileRegistryPath)) return { filesByDate: {} };
+  return JSON.parse(fs.readFileSync(fileRegistryPath, 'utf8'));
+}
+
+function latestFileForDate(businessDate) {
+  const registry = loadFileRegistry();
+  const entries = registry.filesByDate[businessDate] || [];
+  return entries.find((entry) => entry.outputPath && fs.existsSync(entry.outputPath)) || null;
+}
+
+function cents(value) {
+  const number = valueToNumber(value);
+  return number == null ? 0 : Math.round(number * 100);
+}
+
+function formatMoneyFromCents(value) {
+  return (value / 100).toFixed(2);
 }
 
 function reviewRowToNormalized(row) {
@@ -56,6 +77,7 @@ function targetRecordToNormalized(record, index) {
   return normalizeCommon({
     recordId: record.record_id,
     position: index + 1,
+    fields,
     project: valueToText(fields['项目'] || fields['项目名称']),
     code: valueToText(fields.Code || fields.code || fields.CODE),
     shooter: valueToText(fields['投手']),
@@ -82,12 +104,25 @@ function metricUpdates(row) {
   return updates;
 }
 
-function shouldSkip(row) {
-  return /跳过|忽略|不处理|无需处理/.test(row.status);
-}
-
 function hasMetrics(updates) {
   return METRIC_FIELDS.some((field) => Object.prototype.hasOwnProperty.call(updates, field));
+}
+
+function targetSpendTotalCents(records) {
+  return records.reduce((total, record) => total + cents((record.fields || {})['花费金额']), 0);
+}
+
+function xmpSpendTotalCents(feishu, businessDate) {
+  const fileEntry = latestFileForDate(businessDate);
+  if (!fileEntry) return { checked: false, reason: '未找到当天 XMP 原始文件缓存' };
+  const rows = feishu.readAdsRowsFromXlsx(fileEntry.outputPath);
+  const total = rows.reduce((sum, row) => sum + cents(row.metrics && row.metrics.spend), 0);
+  return {
+    checked: true,
+    total,
+    fileName: fileEntry.fileName,
+    rows: rows.length,
+  };
 }
 
 async function readReviewRows(feishu, reviewAppToken) {
@@ -141,10 +176,6 @@ async function finalizeViklikAiMatch(options = {}) {
 
   for (const item of reviewRows) {
     const row = item.row;
-    if (shouldSkip(row)) {
-      skipped.push({ tableName: item.tableName, reason: '处理状态标记为跳过/忽略' });
-      continue;
-    }
     const updates = metricUpdates(row);
     if (!hasMetrics(updates)) {
       skipped.push({ tableName: item.tableName, reason: '没有填写可回写的数值' });
@@ -168,6 +199,7 @@ async function finalizeViklikAiMatch(options = {}) {
     updatesByRecordId.set(target.recordId, {
       ...(updatesByRecordId.get(target.recordId) || {}),
       ...updates,
+      '投手': target.shooter,
     });
   }
 
@@ -176,6 +208,24 @@ async function finalizeViklikAiMatch(options = {}) {
     fields,
   }));
   await feishu.batchUpdateRecords(appToken, targetTable.table_id, updates);
+  const updatedTargetRecords = await feishu.listRecords(appToken, targetTable.table_id);
+  const targetSpend = targetSpendTotalCents(updatedTargetRecords);
+  const xmpSpend = xmpSpendTotalCents(feishu, businessDate);
+  const spendCheck = xmpSpend.checked
+    ? {
+      checked: true,
+      xmpTotal: xmpSpend.total,
+      targetTotal: targetSpend,
+      diff: targetSpend - xmpSpend.total,
+      ok: targetSpend === xmpSpend.total,
+      fileName: xmpSpend.fileName,
+      xmpRows: xmpSpend.rows,
+    }
+    : {
+      checked: false,
+      targetTotal: targetSpend,
+      reason: xmpSpend.reason,
+    };
 
   return {
     businessDate,
@@ -186,15 +236,20 @@ async function finalizeViklikAiMatch(options = {}) {
     reviewRows: reviewRows.length,
     updatedRows: updates.length,
     skippedRows: skipped.length,
+    spendCheck,
     skipped,
   };
 }
 
 function formatViklikFinalSummary(result) {
+  const spendLine = result.spendCheck.checked
+    ? `花费校验：${result.spendCheck.ok ? '一致' : '不一致'}（XMP ${formatMoneyFromCents(result.spendCheck.xmpTotal)} / ai匹配表 ${formatMoneyFromCents(result.spendCheck.targetTotal)} / 差额 ${formatMoneyFromCents(result.spendCheck.diff)}）`
+    : `花费校验：未完成（${result.spendCheck.reason}，ai匹配表 ${formatMoneyFromCents(result.spendCheck.targetTotal)}）`;
   return [
     `更新完成：${result.targetTableName}`,
     `回写成功：${result.updatedRows} 条`,
     `跳过：${result.skippedRows} 条`,
+    spendLine,
     result.targetUrl,
     '',
     `核对表：${result.reviewAppName}`,
