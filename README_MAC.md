@@ -26,7 +26,26 @@ brew install node python
 
 ## 2. 启动
 
-同时启动 robot1 和 robot2：
+推荐使用 macOS 常驻方式启动。启动后机器人会交给 `launchctl` 管理，进程退出会自动拉起：
+
+```bash
+./launch_bots_mac.sh
+```
+
+停止常驻机器人：
+
+```bash
+./unlaunch_bots_mac.sh
+```
+
+查看常驻日志：
+
+```bash
+tail -f outputs/robot1.launchd.out.log outputs/robot1.launchd.err.log
+tail -f outputs/robot2.launchd.out.log outputs/robot2.launchd.err.log
+```
+
+也可以使用普通后台脚本同时启动 robot1 和 robot2：
 
 ```bash
 ./start_all_mac.sh

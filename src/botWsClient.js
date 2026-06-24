@@ -137,6 +137,31 @@ async function sendResultText(sourceMessageId, text) {
   await feishu.replyText(sourceMessageId, text);
 }
 
+function logStep(entry) {
+  console.log(JSON.stringify({ at: new Date().toISOString(), ...entry }, null, 2));
+}
+
+function timeoutAfter(ms, label) {
+  return new Promise((_, reject) => {
+    setTimeout(() => reject(new Error(`${label} timeout after ${ms}ms`)), ms);
+  });
+}
+
+async function safeNotify(label, notifyPromise) {
+  try {
+    await Promise.race([notifyPromise, timeoutAfter(15000, label)]);
+    return true;
+  } catch (error) {
+    const details = error.details || { message: error.message };
+    logStep({
+      event: 'notify_failed',
+      label,
+      details,
+    });
+    return false;
+  }
+}
+
 async function handleFileMessage(message, summary) {
   const cleanup = cleanupIncomingFiles();
   if (cleanup.deletedFiles || cleanup.deletedDirs) {
@@ -163,6 +188,14 @@ async function handleFileMessage(message, summary) {
     outputPath,
     'file'
   );
+  logStep({
+    event: 'file_downloaded',
+    messageId: summary.messageId,
+    fileName,
+    businessDate,
+    fileType,
+    bytes: downloaded.bytes,
+  });
 
   const entry = {
     receivedAt: new Date().toISOString(),
@@ -184,41 +217,59 @@ async function handleFileMessage(message, summary) {
   }[fileType];
 
   if (fileType === 'raw_ads') {
-    await reply(
-      message.message_id,
-      [
-        `已下载原始广告文件：${fileName}`,
-        `识别日期：${businessDate}`,
-        '开始查找同日期投手数据，并生成 ai 修正表...',
-      ].join('\n')
+    await safeNotify(
+      'reply_raw_ads_downloaded',
+      reply(
+        message.message_id,
+        [
+          `已下载原始广告文件：${fileName}`,
+          `识别日期：${businessDate}`,
+          '开始查找同日期投手数据，并生成 ai 修正表...',
+        ].join('\n')
+      )
     );
 
+    logStep({
+      event: 'raw_ads_processing_started',
+      messageId: summary.messageId,
+      fileName,
+      businessDate,
+    });
     const result = await processIncomingRawFile({
       rawFilePath: downloaded.outputPath,
       rawFileName: fileName,
       businessDate,
     });
+    logStep({
+      event: 'raw_ads_processing_finished',
+      messageId: summary.messageId,
+      targetTableName: result.targetTableName,
+      targetRows: result.targetRows,
+    });
 
-    await sendResultText(
-      message.message_id,
-      [
-        `处理完成：${result.targetTableName}`,
-        '',
-        `原始表：${result.adsRows} 条`,
-        `投手表：${result.sourceRows} 条`,
-        '',
-        `AI修正表：${result.targetRows} 条`,
-        `AI修正表链接：${result.targetUrl}`,
-        '',
-        `抓取失败表：${result.crawlFailureTable ? result.crawlFailureTable.rows : 0} 条`,
-        result.crawlFailureTable ? `抓取失败表链接：${result.crawlFailureTable.url}` : '抓取失败表：无记录，未新建',
-        '',
-        `投手不一致表：${result.mismatchTable ? result.mismatchTable.rows : 0} 条`,
-        result.mismatchTable ? `投手不一致表：${result.mismatchTable.url}` : '投手不一致表：无记录，未新建',
-        '',
-        `未匹配表：${result.unmatchedTable ? result.unmatchedTable.rows : 0} 条`,
-        result.unmatchedTable ? `未匹配表链接：${result.unmatchedTable.url}` : '未匹配表：无记录，未新建',
-      ].join('\n')
+    await safeNotify(
+      'send_raw_ads_result',
+      sendResultText(
+        message.message_id,
+        [
+          `处理完成：${result.targetTableName}`,
+          '',
+          `原始表：${result.adsRows} 条`,
+          `投手表：${result.sourceRows} 条`,
+          '',
+          `AI修正表：${result.targetRows} 条`,
+          `AI修正表链接：${result.targetUrl}`,
+          '',
+          `抓取失败表：${result.crawlFailureTable ? result.crawlFailureTable.rows : 0} 条`,
+          result.crawlFailureTable ? `抓取失败表链接：${result.crawlFailureTable.url}` : '抓取失败表：无记录，未新建',
+          '',
+          `投手不一致表：${result.mismatchTable ? result.mismatchTable.rows : 0} 条`,
+          result.mismatchTable ? `投手不一致表：${result.mismatchTable.url}` : '投手不一致表：无记录，未新建',
+          '',
+          `未匹配表：${result.unmatchedTable ? result.unmatchedTable.rows : 0} 条`,
+          result.unmatchedTable ? `未匹配表链接：${result.unmatchedTable.url}` : '未匹配表：无记录，未新建',
+        ].join('\n')
+      )
     );
 
     return;
