@@ -7,7 +7,7 @@
     "start:robot1": "node src/botWsClient.js",
     "start:robot2": "node src/finalBotWsClient.js",
     "start:viklik-xmp": "FEISHU_ENV_PATH=.env.viklik.robot1 FEISHU_DOC_ENV_PATH=.env.viklik.robot1 node src/viklikXmpMorningBot.js",
-    "check": "node -c src/botWsClient.js && node -c src/finalBotWsClient.js && node -c src/processIncomingRawFile.js && node -c src/finalizeDailyCorrection.js && node -c src/viklikXmpMorningBot.js"
+    "check": "node -c src/botWsClient.js && node -c src/finalBotWsClient.js && node -c src/processIncomingRawFile.js && node -c src/finalizeDailyCorrection.js && node -c src/viklikXmpMorningBot.js && node -c src/viklikFinalizeCorrection.js"
   },
   "dependencies": {
     "@larksuiteoapi/node-sdk": "^1.48.0",

@@ -289,6 +289,25 @@ class FeishuClient {
     return this.readAdsRowsFromValues(values);
   }
 
+  async readSheetValues(rawUrl, range = 'A1:Z5000') {
+    const spreadsheetToken = await this.resolveSpreadsheetToken(rawUrl);
+    const parsed = new URL(rawUrl);
+    let sheetId = parsed.searchParams.get('sheet') || '';
+    if (!sheetId) {
+      const sheetsData = await this.request(`/open-apis/sheets/v3/spreadsheets/${encodeURIComponent(spreadsheetToken)}/sheets/query`, {
+        method: 'GET',
+      });
+      const firstSheet = (sheetsData.sheets || [])[0];
+      if (!firstSheet) throw new Error('Workbook has no sheet');
+      sheetId = firstSheet.sheet_id || firstSheet.sheetId;
+    }
+    const valuesData = await this.request(
+      `/open-apis/sheets/v2/spreadsheets/${encodeURIComponent(spreadsheetToken)}/values/${encodeURIComponent(`${sheetId}!${range}`)}`,
+      { method: 'GET' }
+    );
+    return valuesData.valueRange && valuesData.valueRange.values ? valuesData.valueRange.values : [];
+  }
+
   readAdsRowsFromValues(values) {
     const headers = values[0] || [];
     return values

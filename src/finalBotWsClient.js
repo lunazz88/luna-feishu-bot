@@ -7,6 +7,10 @@ const {
   isFinalUpdateCommand,
   parseBusinessDate,
 } = require('./finalizeDailyCorrection');
+const {
+  finalizeViklikAiMatch,
+  formatViklikFinalSummary,
+} = require('./viklikFinalizeCorrection');
 const { claimFinalCommand } = require('./finalCommandState');
 
 const Lark = require(path.join(config.nodeModulesDir, '@larksuiteoapi/node-sdk'));
@@ -44,15 +48,23 @@ async function handleMessage(data) {
   if (!claimFinalCommand(message.message_id)) return;
 
   const businessDate = parseBusinessDate(text);
-  await reply(message.message_id, `收到，开始生成 ${businessDate} 的最终修正表...`);
+  const isViklikMode = /viklik/i.test(process.env.FEISHU_DOC_ENV_PATH || process.env.FEISHU_ENV_PATH || '');
+  await reply(message.message_id, isViklikMode
+    ? `收到，开始回写 ${businessDate} 的 ai匹配表...`
+    : `收到，开始生成 ${businessDate} 的最终修正表...`);
 
   try {
-    const result = await finalizeDailyCorrection({ businessDate });
-    await reply(message.message_id, formatFinalSummary(result));
+    if (isViklikMode) {
+      const result = await finalizeViklikAiMatch({ businessDate });
+      await reply(message.message_id, formatViklikFinalSummary(result));
+    } else {
+      const result = await finalizeDailyCorrection({ businessDate });
+      await reply(message.message_id, formatFinalSummary(result));
+    }
   } catch (error) {
     const details = error.details || { message: error.message };
     console.log(JSON.stringify(details, null, 2));
-    await reply(message.message_id, `生成最终修正表失败：${details.msg || details.message || '未知错误'}`);
+    await reply(message.message_id, `处理失败：${details.msg || details.message || '未知错误'}`);
   }
 }
 
@@ -72,6 +84,7 @@ async function main() {
   client.start({ eventDispatcher: dispatcher });
   console.log('final correction bot started');
   console.log(`env: ${config.envPath}`);
+  console.log(`doc env: ${process.env.FEISHU_DOC_ENV_PATH || ''}`);
   console.log('command example: 更新六月八号数据');
 }
 

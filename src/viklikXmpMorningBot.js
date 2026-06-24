@@ -198,6 +198,73 @@ function readAdsRows(feishu, filePath) {
   return rows.map((row) => normalizeCommon(row));
 }
 
+function ruleLookupText(value) {
+  return valueToText(value)
+    .trim()
+    .toLowerCase()
+    .replace(/[，、；;]/g, ',')
+    .replace(/\s+/g, '');
+}
+
+function countryFromProject(project) {
+  const match = valueToText(project).match(/-([A-Za-z]{2})\s*$/);
+  return match ? match[1].toUpperCase() : '';
+}
+
+async function loadProjectRules(feishu) {
+  if (!config.xmpProjectRulesUrl) return new Map();
+  try {
+    const values = await feishu.readSheetValues(config.xmpProjectRulesUrl, 'A1:H5000');
+    const headers = (values[0] || []).map((header) => valueToText(header).replace(/\s+/g, ''));
+    const indexOf = (names) => names.map((name) => headers.indexOf(name)).find((index) => index >= 0);
+    const irregularIndex = indexOf(['不规则情况']);
+    const projectIndex = indexOf(['项目名称', '项目']);
+    const codeIndex = indexOf(['Code', 'code']);
+    const shooterIndex = indexOf(['投手']);
+    const rules = new Map();
+
+    for (const row of values.slice(1)) {
+      const irregular = irregularIndex >= 0 ? valueToText(row[irregularIndex]) : '';
+      const project = projectIndex >= 0 ? valueToText(row[projectIndex]) : '';
+      if (!irregular || !project) continue;
+      rules.set(ruleLookupText(irregular), {
+        project,
+        code: codeIndex >= 0 ? valueToText(row[codeIndex]) : '',
+        shooter: shooterIndex >= 0 ? valueToText(row[shooterIndex]) : '',
+        country: countryFromProject(project),
+      });
+    }
+    logStep({ event: 'xmp_project_rules_loaded', rows: rules.size });
+    return rules;
+  } catch (error) {
+    logStep({
+      event: 'xmp_project_rules_load_failed',
+      details: error.details || { message: error.message },
+    });
+    return new Map();
+  }
+}
+
+function applyProjectRules(adsRows, rules) {
+  if (!rules || !rules.size) return adsRows;
+  return adsRows.map((row) => {
+    const rule = rules.get(ruleLookupText(row.project));
+    if (!rule) return row;
+    return normalizeCommon({
+      ...row,
+      originalProject: row.project,
+      originalCode: row.code,
+      originalShooter: row.shooter,
+      originalCountry: row.country,
+      project: rule.project || row.project,
+      code: rule.code || row.code,
+      shooter: rule.shooter || row.shooter,
+      country: rule.country || row.country,
+      normalizedByRule: true,
+    });
+  });
+}
+
 function matchKey(row) {
   return [row.projectNorm, row.codeStrong, row.shooterNorm, row.countryNorm].join('\u0001');
 }
@@ -690,7 +757,8 @@ async function writeAiMatchTable({ feishu, baseUrl, businessDate, xmpFilePath })
   const existingTarget = await findTargetMatchTable(feishu, appToken, businessDate);
   const target = existingTarget || await createTargetMatchTable(feishu, appToken, source, businessDate);
 
-  const adsRows = readAdsRows(feishu, xmpFilePath);
+  const projectRules = await loadProjectRules(feishu);
+  const adsRows = applyProjectRules(readAdsRows(feishu, xmpFilePath), projectRules);
   const matched = matchAdsToRecords(adsRows, source.records);
   const matchByRecordId = new Map(matched.matches.map((match) => [match.record.recordId, match]));
   const assignedRecordIds = new Set(matched.matches.map((match) => match.record.recordId));
