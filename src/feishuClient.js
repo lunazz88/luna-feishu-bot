@@ -166,6 +166,21 @@ class FeishuClient {
     return { outputPath, bytes: buffer.length };
   }
 
+  async listChatMessages(chatId, options = {}) {
+    return this.request('/open-apis/im/v1/messages', {
+      method: 'GET',
+      params: {
+        container_id_type: 'chat',
+        container_id: chatId,
+        sort_type: options.sortType || 'ByCreateTimeDesc',
+        page_size: options.pageSize || 50,
+        page_token: options.pageToken || undefined,
+        start_time: options.startTime ? String(options.startTime) : undefined,
+        end_time: options.endTime ? String(options.endTime) : undefined,
+      },
+    });
+  }
+
   appToken(url) {
     const parts = new URL(url).pathname.split('/').filter(Boolean);
     const index = parts.indexOf('base');

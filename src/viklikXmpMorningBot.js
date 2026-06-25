@@ -147,16 +147,16 @@ function safeName(name) {
 }
 
 function parseMessageText(message) {
-  const content = parseJson(message.content);
+  const content = parseJson(message.content || (message.body && message.body.content));
   return valueToText(content.text || '');
 }
 
 function summarizeMessage(message) {
-  const content = parseJson(message.content);
+  const content = parseJson(message.content || (message.body && message.body.content));
   return {
     messageId: message.message_id,
     chatId: message.chat_id,
-    messageType: message.message_type,
+    messageType: message.message_type || message.msg_type,
     createTime: message.create_time,
     fileKey: content.file_key || content.fileKey || content.key || '',
     fileName: content.file_name || content.fileName || content.name || '',
@@ -1134,21 +1134,7 @@ async function reply(messageId, text) {
   await feishu.replyText(messageId, text);
 }
 
-async function handleFileMessage(message, summary) {
-  if (config.xmpSourceChatId && message.chat_id !== config.xmpSourceChatId) return;
-
-  const businessDate = standardXmpDate(summary.fileName);
-  if (!businessDate) {
-    logStep({
-      event: 'xmp_file_ignored',
-      chatId: message.chat_id,
-      fileName: summary.fileName,
-      reason: 'not_standard_middle_version',
-    });
-    return;
-  }
-
-  const feishu = await new FeishuClient().init();
+async function cacheXmpFile(feishu, message, summary, businessDate) {
   const outputDir = path.join(cacheRoot, 'incoming', businessDate);
   const outputPath = path.join(outputDir, `${summary.messageId}-${safeName(summary.fileName)}`);
   const downloaded = await feishu.downloadMessageResourceToFile(summary.messageId, summary.fileKey, outputPath, 'file');
@@ -1164,17 +1150,89 @@ async function handleFileMessage(message, summary) {
   };
   rememberFile(entry);
   logStep({ event: 'xmp_file_cached', ...entry });
+  return entry;
+}
+
+async function handleFileMessage(message, summary) {
+  if (config.xmpSourceChatId && message.chat_id !== config.xmpSourceChatId) return;
+
+  const businessDate = standardXmpDate(summary.fileName);
+  if (!businessDate) {
+    logStep({
+      event: 'xmp_file_ignored',
+      chatId: message.chat_id,
+      fileName: summary.fileName,
+      reason: 'not_standard_middle_version',
+    });
+    return;
+  }
+
+  const feishu = await new FeishuClient().init();
+  await cacheXmpFile(feishu, message, summary, businessDate);
+}
+
+async function findAndCacheXmpFileFromHistory(feishu, businessDate) {
+  if (!config.xmpSourceChatId) return null;
+  const targetName = `crawler广告数据报告_${businessDate}.xlsx`;
+  const endTime = Math.floor(Date.now() / 1000) + 3600;
+  const startTime = endTime - 7 * 24 * 60 * 60;
+  let pageToken = '';
+
+  for (let page = 0; page < 10; page += 1) {
+    const result = await feishu.listChatMessages(config.xmpSourceChatId, {
+      pageSize: 50,
+      pageToken,
+      startTime,
+      endTime,
+    });
+    const items = result.items || [];
+    for (const item of items) {
+      const message = {
+        ...item,
+        chat_id: item.chat_id || config.xmpSourceChatId,
+        message_type: item.message_type || item.msg_type,
+        content: item.content || (item.body && item.body.content),
+      };
+      const summary = summarizeMessage(message);
+      if (summary.messageType !== 'file' || summary.fileName !== targetName) continue;
+      logStep({
+        event: 'xmp_history_file_found',
+        businessDate,
+        messageId: summary.messageId,
+        fileName: summary.fileName,
+      });
+      return cacheXmpFile(feishu, message, summary, businessDate);
+    }
+    if (!result.has_more || !result.page_token) break;
+    pageToken = result.page_token;
+  }
+
+  logStep({ event: 'xmp_history_file_not_found', businessDate, targetName });
+  return null;
 }
 
 async function handleTextMessage(message, text) {
   if (!shouldTreatAsCommand(message, text)) return;
 
   const businessDate = parseCommandDate(text);
-  const fileEntry = latestFileForDate(businessDate);
+  let fileEntry = latestFileForDate(businessDate);
+  if (!fileEntry) {
+    try {
+      const feishu = await new FeishuClient().init();
+      fileEntry = await findAndCacheXmpFileFromHistory(feishu, businessDate);
+    } catch (error) {
+      logStep({
+        event: 'xmp_history_search_failed',
+        businessDate,
+        details: error.details || { message: error.message },
+      });
+    }
+  }
+
   if (!fileEntry) {
     await reply(
       message.message_id,
-      `没有找到 ${businessDate} 的标准 XMP 文件。请确认 xmp数据整合分发正式群里已经发送 crawler广告数据报告_${businessDate}.xlsx。`
+      `没有找到 ${businessDate} 的标准 XMP 文件。已尝试回查 xmp数据整合分发正式群最近消息，请确认群里存在 crawler广告数据报告_${businessDate}.xlsx，且机器人有读取历史消息权限。`
     );
     return;
   }
