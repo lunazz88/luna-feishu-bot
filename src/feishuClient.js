@@ -15,6 +15,8 @@ const RETRYABLE_NETWORK_PATTERNS = [
   /before secure TLS connection was established/i,
   /socket disconnected/i,
   /EAI_AGAIN/i,
+  /ENOTFOUND/i,
+  /ETIMEDOUT/i,
   /ECONNREFUSED/i,
   /ECONNABORTED/i,
   /timeout of \d+ms exceeded/i,
