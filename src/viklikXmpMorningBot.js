@@ -494,6 +494,10 @@ function projectCodeKey(row) {
   return [row.projectNorm, row.codeStrong].join('\u0001');
 }
 
+function xmpShooterNorm(ad) {
+  return normalizedName(ad.xmpOriginalShooter || ad.originalShooter || ad.shooter);
+}
+
 function hasExactMatchParts(row) {
   return Boolean(row.projectNorm && row.codeStrong && row.shooterNorm);
 }
@@ -592,6 +596,32 @@ function indexRecords(records, keyFn) {
   return recordIndex;
 }
 
+function uniqueCandidateByShooter(candidates, shooterNorm) {
+  if (!shooterNorm) return null;
+  const matched = candidates.filter((record) => record.shooterNorm === shooterNorm);
+  return matched.length === 1 ? matched[0] : null;
+}
+
+function hasPositiveSpend(ad) {
+  return (valueToNumber(ad.metrics && ad.metrics.spend) || 0) > 0;
+}
+
+function shouldReviewShooterMismatch(ad, record) {
+  const compareShooterNorm = xmpShooterNorm(ad) || ad.shooterNorm;
+  if (!compareShooterNorm || !record.shooterNorm || compareShooterNorm === record.shooterNorm) return false;
+  if (!hasPositiveSpend(ad)) return false;
+  if (record.shooterNorm === 'ricky') return false;
+  return true;
+}
+
+function shooterMismatchReason(ad, record) {
+  return [
+    '项目+标准用户名一致，已按晨报表行写入数值',
+    `XMP原始投手=${valueToText(ad.xmpOriginalShooter || ad.originalShooter || ad.shooter)}`,
+    `晨报投手=${valueToText(record.shooter)}`,
+  ].join('；');
+}
+
 function matchAdsToRecords(adsRows, records) {
   const exactIndex = indexRecords(records, matchKey);
   const projectCodeIndex = indexRecords(records, projectCodeOnlyKey);
@@ -599,7 +629,25 @@ function matchAdsToRecords(adsRows, records) {
   const unmatched = [];
   const crawlFailures = [];
   const shooterMismatches = [];
+  const ignoredShooterMismatches = [];
   const duplicateRecords = [];
+
+  function addMatch(ad, record, strategy, candidatesForReview = [record]) {
+    matches.push({ ad, record, strategy });
+    const compareShooterNorm = xmpShooterNorm(ad) || ad.shooterNorm;
+    if (!compareShooterNorm || !record.shooterNorm || compareShooterNorm === record.shooterNorm) return;
+    const mismatch = {
+      ad,
+      record,
+      candidates: candidatesForReview,
+      reason: shooterMismatchReason(ad, record),
+    };
+    if (shouldReviewShooterMismatch(ad, record)) {
+      shooterMismatches.push(mismatch);
+    } else {
+      ignoredShooterMismatches.push(mismatch);
+    }
+  }
 
   for (const ad of adsRows) {
     const key = matchKey(ad);
@@ -625,19 +673,29 @@ function matchAdsToRecords(adsRows, records) {
       continue;
     }
 
-    if (candidates.length === 1) {
-      matches.push({ ad, record: candidates[0], strategy: 'project+standard_user+shooter' });
+    const originalShooterCandidate = uniqueCandidateByShooter(projectCodeCandidates, xmpShooterNorm(ad));
+    const standardShooterCandidate = uniqueCandidateByShooter(projectCodeCandidates, ad.shooterNorm);
+
+    if (originalShooterCandidate) {
+      addMatch(ad, originalShooterCandidate, 'project+standard_user+xmp_original_shooter');
+    } else if (candidates.length === 1) {
+      addMatch(ad, candidates[0], 'project+standard_user+mapped_shooter');
+    } else if (standardShooterCandidate) {
+      addMatch(ad, standardShooterCandidate, 'project+standard_user+mapped_shooter');
     } else if (candidates.length > 1) {
       duplicateRecords.push({
         ad,
         candidates,
         reason: '晨报/投手表存在多条相同 项目+标准用户名+投手，无法自动判断唯一记录',
       });
-    } else if (projectCodeCandidates.length) {
-      shooterMismatches.push({
+    } else if (projectCodeCandidates.length === 1) {
+      const record = projectCodeCandidates[0];
+      addMatch(ad, record, 'project+standard_user', projectCodeCandidates);
+    } else if (projectCodeCandidates.length > 1) {
+      duplicateRecords.push({
         ad,
         candidates: projectCodeCandidates,
-        reason: '项目+标准用户名一致，但投手不一致',
+        reason: '晨报/投手表存在多条相同 项目+标准用户名，且无法通过XMP原始投手唯一定位',
       });
     } else {
       unmatched.push({
@@ -648,7 +706,7 @@ function matchAdsToRecords(adsRows, records) {
     }
   }
 
-  return { matches, unmatched, crawlFailures, shooterMismatches, duplicateRecords };
+  return { matches, unmatched, crawlFailures, shooterMismatches, ignoredShooterMismatches, duplicateRecords };
 }
 
 function dateLabel(dateText) {
@@ -937,6 +995,42 @@ function metricText(metrics, key) {
   return value === undefined || value === null ? '' : String(value);
 }
 
+function aggregateMatchesByRecord(matches) {
+  const byRecordId = new Map();
+  let mergedRows = 0;
+
+  for (const match of matches) {
+    const recordId = match.record.recordId;
+    const existing = byRecordId.get(recordId);
+    if (!existing) {
+      byRecordId.set(recordId, {
+        ...match,
+        ad: {
+          ...match.ad,
+          metrics: { ...(match.ad.metrics || {}) },
+          sourceRows: [...(match.ad.sourceRows || [match.ad.sourceRow])].filter(Boolean),
+        },
+      });
+      continue;
+    }
+
+    mergedRows += 1;
+    const sourceRows = match.ad.sourceRows || [match.ad.sourceRow];
+    existing.ad.sourceRows.push(...sourceRows.filter(Boolean));
+    existing.ad.sourceRows = [...new Set(existing.ad.sourceRows)];
+    existing.ad.sourceRow = existing.ad.sourceRows.join(',');
+    for (const keyName of METRIC_KEYS) {
+      existing.ad.metrics[keyName] = sumMetricValue(
+        existing.ad.metrics[keyName],
+        match.ad.metrics && match.ad.metrics[keyName]
+      );
+    }
+    existing.strategy = [...new Set([existing.strategy, match.strategy].filter(Boolean))].join(',');
+  }
+
+  return { matches: [...byRecordId.values()], mergedRows };
+}
+
 function reviewRecord({ type, suggestion, reason, ad = null, record = null, candidates = [], strategy = '' }) {
   const firstCandidate = record || (candidates && candidates[0]) || null;
   const project = ad ? ad.project : firstCandidate ? firstCandidate.project : '';
@@ -1061,8 +1155,9 @@ async function writeAiMatchTable({ feishu, baseUrl, businessDate, xmpFilePath })
   const mergedAds = mergeAdsForMatching(reviewableAdsRows);
   const adsRows = mergedAds.rows;
   const matched = matchAdsToRecords(adsRows, source.records);
-  const matchByRecordId = new Map(matched.matches.map((match) => [match.record.recordId, match]));
-  const assignedRecordIds = new Set(matched.matches.map((match) => match.record.recordId));
+  const aggregatedMatches = aggregateMatchesByRecord(matched.matches);
+  const matchByRecordId = new Map(aggregatedMatches.matches.map((match) => [match.record.recordId, match]));
+  const assignedRecordIds = new Set(aggregatedMatches.matches.map((match) => match.record.recordId));
   for (const item of matched.crawlFailures) {
     for (const candidate of item.candidates) assignedRecordIds.add(candidate.recordId);
   }
@@ -1118,11 +1213,14 @@ async function writeAiMatchTable({ feishu, baseUrl, businessDate, xmpFilePath })
     codeRuleMissRows: matched.unmatched.filter((item) => !item.ad.codeRuleMatched).length,
     sourceRows: source.records.length,
     matchedRows: matched.matches.length,
+    matchedTargetRows: aggregatedMatches.matches.length,
+    mergedMatchedRows: aggregatedMatches.mergedRows,
     writtenRows: targetSync.writtenRows,
     deletedRows: targetSync.deletedRows,
     unmatchedRows: matched.unmatched.length,
     crawlFailureRows: matched.crawlFailures.length,
     shooterMismatchRows: matched.shooterMismatches.length,
+    ignoredShooterMismatchRows: matched.ignoredShooterMismatches.length,
     shooterOnlyRows: shooterOnlyRecords.length,
     duplicateRows: matched.duplicateRecords.length,
     resultTables,
@@ -1259,8 +1357,11 @@ async function handleTextMessage(message, text) {
         `规则未命中：${result.codeRuleMissRows} 条`,
         `投手表：${result.sourceRows} 条`,
         `匹配成功：${result.matchedRows} 条`,
+        `写入命中行：${result.matchedTargetRows} 条`,
+        `同一行累计：${result.mergedMatchedRows} 条`,
         `抓取失败：${result.crawlFailureRows} 条`,
         `投手不一致：${result.shooterMismatchRows} 条`,
+        `投手不一致已忽略：${result.ignoredShooterMismatchRows} 条`,
         `XMP未匹配：${result.unmatchedRows + result.duplicateRows} 条`,
         `晨报有XMP没有：${result.shooterOnlyRows} 条`,
         `清空旧记录：${result.deletedRows} 条`,
