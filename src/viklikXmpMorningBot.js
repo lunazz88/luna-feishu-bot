@@ -995,6 +995,43 @@ function metricText(metrics, key) {
   return value === undefined || value === null ? '' : String(value);
 }
 
+function moneyCents(value) {
+  const number = valueToNumber(value);
+  return number == null ? 0 : Math.round(number * 100);
+}
+
+function formatMoneyCents(value) {
+  return (value / 100).toFixed(2);
+}
+
+function sumAdsSpendCents(rows) {
+  return rows.reduce((sum, row) => sum + moneyCents(row.metrics && row.metrics.spend), 0);
+}
+
+function sumTargetSpendCents(records) {
+  return records.reduce((sum, record) => sum + moneyCents(record.fields && record.fields[METRIC_FIELDS.spend]), 0);
+}
+
+function spendBreakdown(matched, targetRecords, adsRows) {
+  const xmpTotal = sumAdsSpendCents(adsRows);
+  const targetTotal = sumTargetSpendCents(targetRecords);
+  const crawlFailure = sumAdsSpendCents(matched.crawlFailures.map((item) => item.ad));
+  const unmatched = sumAdsSpendCents(matched.unmatched.map((item) => item.ad));
+  const duplicate = sumAdsSpendCents(matched.duplicateRecords.map((item) => item.ad));
+  return {
+    checked: true,
+    ok: xmpTotal === targetTotal,
+    xmpTotal,
+    targetTotal,
+    diff: targetTotal - xmpTotal,
+    pending: {
+      crawlFailure,
+      unmatched,
+      duplicate,
+    },
+  };
+}
+
 function aggregateMatchesByRecord(matches) {
   const byRecordId = new Map();
   let mergedRows = 0;
@@ -1175,6 +1212,7 @@ async function writeAiMatchTable({ feishu, baseUrl, businessDate, xmpFilePath })
   ));
 
   const targetRecords = source.rawRecords.map((record) => buildMatchRecord(record, source.fields, matchByRecordId));
+  const spendCheck = spendBreakdown(matched, targetRecords, adsRows);
   const targetSync = await syncMatchTableRecords(feishu, appToken, target, targetRecords);
   const reviewApp = await ensureReviewApp(feishu, baseUrl, businessDate);
   await deleteResultTableIfExists(feishu, reviewApp.appToken, '匹配成功');
@@ -1215,6 +1253,7 @@ async function writeAiMatchTable({ feishu, baseUrl, businessDate, xmpFilePath })
     matchedRows: matched.matches.length,
     matchedTargetRows: aggregatedMatches.matches.length,
     mergedMatchedRows: aggregatedMatches.mergedRows,
+    spendCheck,
     writtenRows: targetSync.writtenRows,
     deletedRows: targetSync.deletedRows,
     unmatchedRows: matched.unmatched.length,
@@ -1366,6 +1405,11 @@ async function handleTextMessage(message, text) {
         `晨报有XMP没有：${result.shooterOnlyRows} 条`,
         `清空旧记录：${result.deletedRows} 条`,
         `写入ai匹配表：${result.writtenRows} 条`,
+        `花费校验：${result.spendCheck.ok ? '一致' : '不一致'}`,
+        `XMP总花费：${formatMoneyCents(result.spendCheck.xmpTotal)}`,
+        `ai匹配表总花费：${formatMoneyCents(result.spendCheck.targetTotal)}`,
+        `差额：${formatMoneyCents(result.spendCheck.diff)}`,
+        `未写入来源：抓取失败 ${formatMoneyCents(result.spendCheck.pending.crawlFailure)} / 未匹配 ${formatMoneyCents(result.spendCheck.pending.unmatched)} / 重复无法判断 ${formatMoneyCents(result.spendCheck.pending.duplicate)}`,
         result.targetUrl,
         `核对表：${result.reviewApp.name}`,
         result.reviewApp.url,
