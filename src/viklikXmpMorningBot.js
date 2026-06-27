@@ -1422,7 +1422,6 @@ async function handleTextMessage(message, text) {
         `XMP空白项目行：${result.ignoredAdsRows} 条`,
         `标准用户名规则：${result.codeRuleRows} 条`,
         `规则未命中：${result.codeRuleMissRows} 条`,
-        `规则未命中但兜底匹配：${result.codeRuleFallbackRows} 条`,
         `投手表：${result.sourceRows} 条`,
         `匹配成功：${result.matchedRows} 条`,
         `写入命中行：${result.matchedTargetRows} 条`,
