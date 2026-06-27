@@ -43,11 +43,33 @@ function cleanCode(value) {
     .replace(/\.0$/, '');
 }
 
-function strongCode(value) {
-  let text = cleanCode(value).replace(/code/g, '').replace(/[^a-z0-9]/g, '');
-  text = text.replace(/^tech0*(\d+)$/, '$1');
-  if (/^\d+$/.test(text)) text = String(Number(text));
+function compactCode(value) {
+  return cleanCode(value).replace(/[^a-z0-9]/g, '');
+}
+
+function canonicalCode(value) {
+  const text = compactCode(value);
+  if (!text) return '';
+  const numeric = text.match(/^0*(\d+)$/);
+  if (numeric) return String(Number(numeric[1]));
+
+  const commonPrefixed = text.match(/^(?:code|tech)0*(\d+)$/);
+  if (commonPrefixed) return String(Number(commonPrefixed[1]));
+
   return text;
+}
+
+function strongCode(value) {
+  return canonicalCode(value);
+}
+
+function codeVariants(value) {
+  const compact = compactCode(value);
+  const canonical = canonicalCode(value);
+  const variants = new Set();
+  if (canonical) variants.add(canonical);
+  if (compact && compact !== canonical) variants.add(compact);
+  return [...variants];
 }
 
 function normalizeName(value) {
@@ -67,6 +89,7 @@ function normalizeCommon(row) {
   row.projectNorm = normalizeProject(row.project);
   row.codeClean = cleanCode(row.code);
   row.codeStrong = strongCode(row.code);
+  row.codeVariants = codeVariants(row.code);
   row.shooterNorm = normalizeName(row.shooter);
   row.countryNorm = normalizeName(row.country);
   row.kpiNorm = kpiText(row.kpi);
@@ -176,5 +199,6 @@ module.exports = {
   valueToText,
   valueToNumber,
   normalizeCommon,
+  codeVariants,
   matchAdsToRecords,
 };

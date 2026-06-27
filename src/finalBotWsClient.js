@@ -30,6 +30,26 @@ function parseMessageText(message) {
   return parseJson(message.content).text || '';
 }
 
+function mentionNamesFromMessage(message) {
+  const content = parseJson(message.content || (message.body && message.body.content));
+  const mentions = [
+    ...(Array.isArray(message.mentions) ? message.mentions : []),
+    ...(Array.isArray(content.mentions) ? content.mentions : []),
+  ];
+  return mentions
+    .map((mention) => String(mention.name || mention.text || mention.key || ''))
+    .filter(Boolean);
+}
+
+function hasBotMention(message, text, names) {
+  const expected = names.map((name) => name.toLowerCase());
+  const textValue = String(text || '').toLowerCase();
+  if (expected.some((name) => textValue.includes(`@${name}`))) return true;
+  return mentionNamesFromMessage(message)
+    .map((name) => name.toLowerCase())
+    .some((name) => expected.includes(name) || expected.some((expectedName) => name.includes(expectedName)));
+}
+
 async function reply(messageId, text) {
   const feishu = await new FeishuClient().init();
   return feishu.replyText(messageId, text);
@@ -44,11 +64,15 @@ async function handleMessage(data) {
 
   if (message.message_type !== 'text') return;
   const text = parseMessageText(message).trim();
-  if (!isFinalUpdateCommand(text)) return;
+  const isViklikMode = /viklik/i.test(process.env.FEISHU_DOC_ENV_PATH || process.env.FEISHU_ENV_PATH || '');
+  const isTargetBot = isViklikMode
+    ? hasBotMention(message, text, ['晨报数据更新机器人'])
+    : isFinalUpdateCommand(text);
+  if (!isTargetBot) return;
+  const businessDate = parseBusinessDate(text);
+  if (!businessDate) return;
   if (!claimFinalCommand(message.message_id)) return;
 
-  const businessDate = parseBusinessDate(text);
-  const isViklikMode = /viklik/i.test(process.env.FEISHU_DOC_ENV_PATH || process.env.FEISHU_ENV_PATH || '');
   await reply(message.message_id, isViklikMode
     ? `收到，开始回写 ${businessDate} 的 ai匹配表...`
     : `收到，开始生成 ${businessDate} 的最终修正表...`);

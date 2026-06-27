@@ -9,6 +9,7 @@ const reviewAppRegistryPath = path.join(cacheRoot, 'review-app-registry.json');
 const fileRegistryPath = path.join(cacheRoot, 'xmp-file-registry.json');
 
 const METRIC_FIELDS = ['花费金额', '展示次数', '点击量', '注册人数', '首存人数'];
+const XMP_ONLY_TABLE = 'XMP有晨报没有';
 
 function paddedDateLabel(dateText) {
   const [, month, day] = String(dateText).match(/^20\d{2}-(\d{2})-(\d{2})$/) || [];
@@ -85,8 +86,17 @@ function targetRecordToNormalized(record, index) {
   });
 }
 
-function matchKey(row) {
-  return [row.projectNorm, row.codeStrong, row.shooterNorm].join('\u0001');
+function fieldName(fields, candidates, fallback) {
+  const byName = new Map((fields || []).map((field) => [field.field_name, field.field_name]));
+  return candidates.find((candidate) => byName.has(candidate)) || fallback || candidates[0];
+}
+
+function projectCodeKey(row) {
+  return [row.projectNorm, row.codeStrong].join('\u0001');
+}
+
+function hasProjectCode(row) {
+  return Boolean(row.projectNorm && row.codeStrong);
 }
 
 function metricUpdates(row) {
@@ -106,6 +116,38 @@ function metricUpdates(row) {
 
 function hasMetrics(updates) {
   return METRIC_FIELDS.some((field) => Object.prototype.hasOwnProperty.call(updates, field));
+}
+
+function hasPositiveMetric(updates) {
+  return METRIC_FIELDS.some((field) => valueToNumber(updates[field]) > 0);
+}
+
+function buildShooterValueByName(targetRows) {
+  const byName = new Map();
+  for (const row of targetRows) {
+    const rawValue = row.fields && row.fields['投手'];
+    const name = valueToText(rawValue).trim().toLowerCase();
+    if (!name || byName.has(name)) continue;
+    byName.set(name, rawValue);
+  }
+  return byName;
+}
+
+function appendFieldsFromReviewRow(row, updates, targetFields, shooterValueByName) {
+  const projectField = fieldName(targetFields, ['项目', '项目名称'], '项目');
+  const codeField = fieldName(targetFields, ['Code', 'code', 'CODE'], 'Code');
+  const countryField = fieldName(targetFields, ['国家'], '国家');
+  const fields = {
+    [projectField]: row.project,
+    [codeField]: row.code,
+    ...updates,
+  };
+
+  if (row.country) fields[countryField] = row.country;
+  const shooterValue = shooterValueByName.get(valueToText(row.shooter).trim().toLowerCase());
+  if (shooterValue) fields['投手'] = shooterValue;
+
+  return { fields };
 }
 
 function targetSpendTotalCents(records) {
@@ -160,18 +202,22 @@ async function finalizeViklikAiMatch(options = {}) {
   const reviewApp = registry.appsByDate[businessDate];
   if (!reviewApp || !reviewApp.appToken) throw new Error(`未找到 ${paddedDateLabel(businessDate)} 的核对表记录，请先运行第一个机器人`);
 
+  const targetFields = await feishu.listFields(appToken, targetTable.table_id);
   const targetRawRecords = await feishu.listRecords(appToken, targetTable.table_id);
   const targetRows = targetRawRecords.map(targetRecordToNormalized);
   const byPosition = new Map(targetRows.map((row) => [row.position, row]));
-  const byKey = new Map();
+  const shooterValueByName = buildShooterValueByName(targetRows);
+  const byProjectCode = new Map();
   for (const row of targetRows) {
-    const key = matchKey(row);
-    if (!byKey.has(key)) byKey.set(key, []);
-    byKey.get(key).push(row);
+    const key = projectCodeKey(row);
+    if (!byProjectCode.has(key)) byProjectCode.set(key, []);
+    byProjectCode.get(key).push(row);
   }
 
   const reviewRows = await readReviewRows(feishu, reviewApp.appToken);
   const updatesByRecordId = new Map();
+  const appendRecords = [];
+  const appendedProjectCodes = new Set();
   const skipped = [];
   const shooterMismatchManual = {
     rowsWithMetrics: 0,
@@ -185,19 +231,42 @@ async function finalizeViklikAiMatch(options = {}) {
       skipped.push({ tableName: item.tableName, reason: '没有填写可回写的数值' });
       continue;
     }
+    if (!hasPositiveMetric(updates)) {
+      skipped.push({ tableName: item.tableName, reason: '数值全为0，避免覆盖ai匹配表已有数据' });
+      continue;
+    }
+    if (!hasProjectCode(row)) {
+      skipped.push({ tableName: item.tableName, reason: '项目或code为空，无法按 项目+code 回写' });
+      continue;
+    }
     if (item.tableName === '投手不一致') shooterMismatchManual.rowsWithMetrics += 1;
 
-    let target = row.targetPosition ? byPosition.get(row.targetPosition) : null;
-    if (!target) {
-      const candidates = byKey.get(matchKey(row)) || [];
-      if (candidates.length === 1) target = candidates[0];
-      if (candidates.length > 1) {
-        skipped.push({ tableName: item.tableName, reason: '找到多条目标候选，无法自动判断' });
+    const rowProjectCodeKey = projectCodeKey(row);
+    const candidates = byProjectCode.get(rowProjectCodeKey) || [];
+    if (item.tableName === XMP_ONLY_TABLE && candidates.length === 0) {
+      if (appendedProjectCodes.has(rowProjectCodeKey)) {
+        skipped.push({ tableName: item.tableName, reason: '同一次回写中已新增相同 项目+code，避免重复新增' });
         continue;
+      }
+      appendRecords.push(appendFieldsFromReviewRow(row, updates, targetFields, shooterValueByName));
+      appendedProjectCodes.add(rowProjectCodeKey);
+      continue;
+    }
+
+    let target = null;
+    if (candidates.length === 1) {
+      target = candidates[0];
+    } else if (candidates.length > 1) {
+      skipped.push({ tableName: item.tableName, reason: '项目+code 找到多条目标候选，无法自动判断' });
+      continue;
+    } else if (row.targetPosition) {
+      const positionedTarget = byPosition.get(row.targetPosition);
+      if (positionedTarget && projectCodeKey(positionedTarget) === projectCodeKey(row)) {
+        target = positionedTarget;
       }
     }
     if (!target) {
-      skipped.push({ tableName: item.tableName, reason: '未找到可回写的 ai匹配表行' });
+      skipped.push({ tableName: item.tableName, reason: '未找到相同 项目+code 的 ai匹配表行' });
       continue;
     }
 
@@ -213,6 +282,9 @@ async function finalizeViklikAiMatch(options = {}) {
     fields,
   }));
   await feishu.batchUpdateRecords(appToken, targetTable.table_id, updates);
+  if (appendRecords.length) {
+    await feishu.batchCreateRecords(appToken, targetTable.table_id, appendRecords);
+  }
   const updatedTargetRecords = await feishu.listRecords(appToken, targetTable.table_id);
   const targetSpend = targetSpendTotalCents(updatedTargetRecords);
   const xmpSpend = xmpSpendTotalCents(feishu, businessDate);
@@ -240,6 +312,7 @@ async function finalizeViklikAiMatch(options = {}) {
     reviewAppUrl: reviewApp.url,
     reviewRows: reviewRows.length,
     updatedRows: updates.length,
+    appendedRows: appendRecords.length,
     skippedRows: skipped.length,
     shooterMismatchManual,
     spendCheck,
@@ -256,7 +329,8 @@ function formatViklikFinalSummary(result) {
     : '投手需人工修改：0 条';
   return [
     `更新完成：${result.targetTableName}`,
-    `回写成功：${result.updatedRows} 条`,
+    `回写已有行：${result.updatedRows} 条`,
+    `新增行：${result.appendedRows || 0} 条`,
     `跳过：${result.skippedRows} 条`,
     shooterMismatchLine,
     spendLine,

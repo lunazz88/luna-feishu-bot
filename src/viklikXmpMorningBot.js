@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const { config } = require('./config');
 const { FeishuClient } = require('./feishuClient');
-const { normalizeCommon, valueToNumber, valueToText } = require('./matcher');
+const { codeVariants, normalizeCommon, valueToNumber, valueToText } = require('./matcher');
 const {
   buildTargetRecord,
   chineseDateName,
@@ -183,6 +183,26 @@ function commandTextWithoutMentions(text) {
   return String(text || '').replace(/@_user_\d+\s*/g, '').trim();
 }
 
+function mentionNamesFromMessage(message) {
+  const content = parseJson(message.content || (message.body && message.body.content));
+  const mentions = [
+    ...(Array.isArray(message.mentions) ? message.mentions : []),
+    ...(Array.isArray(content.mentions) ? content.mentions : []),
+  ];
+  return mentions
+    .map((mention) => valueToText(mention.name || mention.text || mention.key))
+    .filter(Boolean);
+}
+
+function hasBotMention(message, text, names) {
+  const expected = names.map((name) => name.toLowerCase());
+  const textValue = String(text || '').toLowerCase();
+  if (expected.some((name) => textValue.includes(`@${name}`))) return true;
+  return mentionNamesFromMessage(message)
+    .map((name) => name.toLowerCase())
+    .some((name) => expected.includes(name) || expected.some((expectedName) => name.includes(expectedName)));
+}
+
 function isFinalRobotCommand(text) {
   return /^(更新|回写|写回|同步|修正)/.test(commandTextWithoutMentions(text));
 }
@@ -190,9 +210,9 @@ function isFinalRobotCommand(text) {
 function shouldTreatAsCommand(message, text) {
   if (config.xmpOperatorChatId && message.chat_id !== config.xmpOperatorChatId) return false;
   if (!parseCommandDate(text)) return false;
+  if (!hasBotMention(message, text, ['xmp晨报数据匹配机器人'])) return false;
   if (isFinalRobotCommand(text)) return false;
-  if (config.xmpOperatorChatId) return true;
-  return /@|xmp|XMP|匹配|晨报/.test(text);
+  return true;
 }
 
 function loadRegistry() {
@@ -293,6 +313,10 @@ function countryFromProject(project) {
 
 function normalizedCode(value) {
   return normalizeCommon({ code: value }).codeStrong;
+}
+
+function normalizedCodeVariants(value) {
+  return codeVariants(value);
 }
 
 function normalizedProject(value) {
@@ -403,8 +427,8 @@ async function loadCodeRules(feishu) {
       rows += 1;
 
       const codeCandidates = new Set([
-        normalizedCode(rule.xmpCode),
-        normalizedCode(rule.standardUser),
+        ...normalizedCodeVariants(rule.xmpCode),
+        ...normalizedCodeVariants(rule.standardUser),
       ].filter(Boolean));
       for (const code of codeCandidates) {
         const key = [rule.projectNorm, code].join('\u0001');
@@ -426,10 +450,14 @@ async function loadCodeRules(feishu) {
 }
 
 function pickCodeRule(row, codeRules) {
-  const candidates = codeRules.byProjectCode.get([row.projectNorm, row.codeStrong].join('\u0001')) || [];
+  const candidates = getCandidatesByKeys(
+    codeRules.byProjectCode,
+    projectCodeOnlyKeys(row)
+  );
   if (!candidates.length) return null;
   if (candidates.length === 1) return candidates[0];
-  return candidates.find((rule) => rule.shooterNorm && rule.shooterNorm === row.shooterNorm) || candidates[0];
+  const shooterMatches = candidates.filter((rule) => rule.shooterNorm && rule.shooterNorm === row.shooterNorm);
+  return shooterMatches.length === 1 ? shooterMatches[0] : null;
 }
 
 function applyCodeRules(adsRows, codeRules) {
@@ -492,6 +520,37 @@ function projectCodeOnlyKey(row) {
 
 function projectCodeKey(row) {
   return [row.projectNorm, row.codeStrong].join('\u0001');
+}
+
+function rowCodeVariants(row) {
+  return [...new Set([
+    ...(row.codeVariants || []),
+    row.codeStrong,
+  ].filter(Boolean))];
+}
+
+function matchKeys(row) {
+  if (!row.projectNorm || !row.shooterNorm) return [];
+  return rowCodeVariants(row).map((code) => [row.projectNorm, code, row.shooterNorm].join('\u0001'));
+}
+
+function projectCodeOnlyKeys(row) {
+  if (!row.projectNorm) return [];
+  return rowCodeVariants(row).map((code) => [row.projectNorm, code].join('\u0001'));
+}
+
+function getCandidatesByKeys(index, keys) {
+  const candidates = [];
+  const seen = new Set();
+  for (const key of keys) {
+    for (const candidate of index.get(key) || []) {
+      const id = candidate.recordId || candidate.rowNumber || JSON.stringify(candidate);
+      if (seen.has(id)) continue;
+      seen.add(id);
+      candidates.push(candidate);
+    }
+  }
+  return candidates;
 }
 
 function xmpShooterNorm(ad) {
@@ -577,9 +636,13 @@ function mergeAdsForMatching(adsRows) {
 function adsProjectCodeKeys(adsRows) {
   const keys = new Set();
   for (const row of adsRows) {
-    if (row.projectNorm && row.codeStrong) keys.add(projectCodeKey(row));
+    for (const key of projectCodeOnlyKeys(row)) keys.add(key);
     const originalCode = normalizedCode(row.xmpOriginalCode || row.originalCode);
-    if (row.projectNorm && originalCode) keys.add([row.projectNorm, originalCode].join('\u0001'));
+    if (row.projectNorm && originalCode) {
+      for (const code of normalizedCodeVariants(row.xmpOriginalCode || row.originalCode)) {
+        keys.add([row.projectNorm, code].join('\u0001'));
+      }
+    }
   }
   return keys;
 }
@@ -589,9 +652,13 @@ function indexRecords(records, keyFn) {
   for (const record of records) {
     if (keyFn === matchKey && !hasExactMatchParts(record)) continue;
     if (keyFn === projectCodeOnlyKey && !hasProjectCodeOnlyParts(record)) continue;
-    const key = keyFn(record);
-    if (!recordIndex.has(key)) recordIndex.set(key, []);
-    recordIndex.get(key).push(record);
+    const keys = keyFn === matchKey ? matchKeys(record)
+      : keyFn === projectCodeOnlyKey ? projectCodeOnlyKeys(record)
+        : [keyFn(record)].filter(Boolean);
+    for (const key of keys) {
+      if (!recordIndex.has(key)) recordIndex.set(key, []);
+      recordIndex.get(key).push(record);
+    }
   }
   return recordIndex;
 }
@@ -652,10 +719,8 @@ function matchAdsToRecords(adsRows, records) {
   }
 
   for (const ad of adsRows) {
-    const key = matchKey(ad);
-    const projectCode = projectCodeOnlyKey(ad);
-    const candidates = exactIndex.get(key) || [];
-    const projectCodeCandidates = projectCodeIndex.get(projectCode) || [];
+    const candidates = getCandidatesByKeys(exactIndex, matchKeys(ad));
+    const projectCodeCandidates = getCandidatesByKeys(projectCodeIndex, projectCodeOnlyKeys(ad));
 
     if (isCrawlFailure(ad)) {
       crawlFailures.push({
@@ -1165,7 +1230,7 @@ function shooterMismatchReviewRows(items) {
 }
 
 function unmatchedReviewRows(items) {
-  return items.map((item) => reviewRecord({
+  return items.filter((item) => hasPositiveSpend(item.ad)).map((item) => reviewRecord({
     type: 'XMP有，晨报/投手表未匹配',
     suggestion: '确认晨报是否缺记录',
     reason: item.reason,
