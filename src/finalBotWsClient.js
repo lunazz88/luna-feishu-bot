@@ -45,9 +45,9 @@ function hasBotMention(message, text, names) {
   const expected = names.map((name) => name.toLowerCase());
   const textValue = String(text || '').toLowerCase();
   if (expected.some((name) => textValue.includes(`@${name}`))) return true;
-  return mentionNamesFromMessage(message)
-    .map((name) => name.toLowerCase())
-    .some((name) => expected.includes(name) || expected.some((expectedName) => name.includes(expectedName)));
+  const mentionNames = mentionNamesFromMessage(message).map((name) => name.toLowerCase());
+  if (!mentionNames.length) return null;
+  return mentionNames.some((name) => expected.includes(name) || expected.some((expectedName) => name.includes(expectedName)));
 }
 
 async function reply(messageId, text) {
@@ -65,8 +65,18 @@ async function handleMessage(data) {
   if (message.message_type !== 'text') return;
   const text = parseMessageText(message).trim();
   const isViklikMode = /viklik/i.test(process.env.FEISHU_DOC_ENV_PATH || process.env.FEISHU_ENV_PATH || '');
+  if (isViklikMode) {
+    console.log(JSON.stringify({
+      event: 'viklik_final_message',
+      messageId: message.message_id,
+      chatId: message.chat_id,
+      text,
+      mentions: mentionNamesFromMessage(message),
+    }, null, 2));
+  }
+  const mentionHit = isViklikMode ? hasBotMention(message, text, ['晨报数据更新机器人']) : false;
   const isTargetBot = isViklikMode
-    ? hasBotMention(message, text, ['晨报数据更新机器人'])
+    ? mentionHit === true || (mentionHit === null && isFinalUpdateCommand(text))
     : isFinalUpdateCommand(text);
   if (!isTargetBot) return;
   const businessDate = parseBusinessDate(text);

@@ -46,11 +46,10 @@ const METRIC_KEYS = Object.keys(METRIC_FIELDS);
 const REVIEW_TABLE_FIELDS = {
   '抓取失败': [
     '项目',
-    'code',
-    'XMP原始code',
+    'XMP code',
+    '匹配表匹配code',
     '国家',
     'XMP投手',
-    'XMP原始投手',
     '晨报投手',
     '抓取状态',
     '花费金额',
@@ -63,11 +62,10 @@ const REVIEW_TABLE_FIELDS = {
   ],
   '投手不一致': [
     '项目',
-    'code',
-    'XMP原始code',
+    'XMP code',
+    '匹配表匹配code',
     '国家',
     'XMP投手',
-    'XMP原始投手',
     '晨报投手',
     '花费金额',
     '展示次数',
@@ -80,11 +78,11 @@ const REVIEW_TABLE_FIELDS = {
   ],
   'XMP有晨报没有': [
     '项目',
-    'code',
-    'XMP原始code',
+    'XMP code',
+    '匹配表匹配code',
     '国家',
     'XMP投手',
-    'XMP原始投手',
+    '晨报投手',
     '花费金额',
     '展示次数',
     '点击量',
@@ -96,7 +94,8 @@ const REVIEW_TABLE_FIELDS = {
   ],
   '晨报有XMP没有': [
     '项目',
-    'code',
+    'XMP code',
+    '匹配表匹配code',
     '国家',
     '晨报投手',
     '花费金额',
@@ -111,11 +110,10 @@ const REVIEW_TABLE_FIELDS = {
 
 const DEFAULT_REVIEW_FIELDS = [
   '项目',
-  'code',
-  'XMP原始code',
+  'XMP code',
+  '匹配表匹配code',
   '国家',
   'XMP投手',
-  'XMP原始投手',
   '晨报投手',
   '花费金额',
   '展示次数',
@@ -161,6 +159,7 @@ function summarizeMessage(message) {
     fileKey: content.file_key || content.fileKey || content.key || '',
     fileName: content.file_name || content.fileName || content.name || '',
     content,
+    mentions: mentionNamesFromMessage(message),
   };
 }
 
@@ -175,8 +174,12 @@ function parseCommandDate(text, now = new Date()) {
   if (full) return `${full[1]}-${full[2].padStart(2, '0')}-${full[3].padStart(2, '0')}`;
 
   const short = raw.match(/(?:^|[^\d])(\d{1,2})[./月-](\d{1,2})(?:[^\d]|$)/);
-  if (!short) return '';
-  return `${now.getFullYear()}-${short[1].padStart(2, '0')}-${short[2].padStart(2, '0')}`;
+  if (short) return `${now.getFullYear()}-${short[1].padStart(2, '0')}-${short[2].padStart(2, '0')}`;
+
+  const compact = raw.match(/(?:^|[^\d])(\d{1,2})(\d{2})(?:[^\d]|$)/);
+  if (compact) return `${now.getFullYear()}-${compact[1].padStart(2, '0')}-${compact[2]}`;
+
+  return '';
 }
 
 function commandTextWithoutMentions(text) {
@@ -198,9 +201,9 @@ function hasBotMention(message, text, names) {
   const expected = names.map((name) => name.toLowerCase());
   const textValue = String(text || '').toLowerCase();
   if (expected.some((name) => textValue.includes(`@${name}`))) return true;
-  return mentionNamesFromMessage(message)
-    .map((name) => name.toLowerCase())
-    .some((name) => expected.includes(name) || expected.some((expectedName) => name.includes(expectedName)));
+  const mentionNames = mentionNamesFromMessage(message).map((name) => name.toLowerCase());
+  if (!mentionNames.length) return null;
+  return mentionNames.some((name) => expected.includes(name) || expected.some((expectedName) => name.includes(expectedName)));
 }
 
 function isFinalRobotCommand(text) {
@@ -210,7 +213,8 @@ function isFinalRobotCommand(text) {
 function shouldTreatAsCommand(message, text) {
   if (config.xmpOperatorChatId && message.chat_id !== config.xmpOperatorChatId) return false;
   if (!parseCommandDate(text)) return false;
-  if (!hasBotMention(message, text, ['xmp晨报数据匹配机器人'])) return false;
+  const mentionHit = hasBotMention(message, text, ['xmp晨报数据匹配机器人']);
+  if (mentionHit === false) return false;
   if (isFinalRobotCommand(text)) return false;
   return true;
 }
@@ -684,7 +688,7 @@ function shouldReviewShooterMismatch(ad, record) {
 function shooterMismatchReason(ad, record) {
   return [
     '项目+标准用户名一致，已按晨报表行写入数值',
-    `XMP原始投手=${valueToText(ad.xmpOriginalShooter || ad.originalShooter || ad.shooter)}`,
+    `XMP投手=${valueToText(ad.xmpOriginalShooter || ad.originalShooter || ad.shooter)}`,
     `晨报投手=${valueToText(record.shooter)}`,
   ].join('；');
 }
@@ -746,7 +750,7 @@ function matchAdsToRecords(adsRows, records) {
       unmatched.push({
         ad,
         candidates: [],
-        reason: `标准用户名规则未命中：项目=${valueToText(ad.project)}，XMP原始code=${valueToText(ad.xmpOriginalCode || ad.code)}`,
+        reason: `标准用户名规则未命中：项目=${valueToText(ad.project)}，XMP code=${valueToText(ad.xmpOriginalCode || ad.code)}`,
       });
       continue;
     }
@@ -790,7 +794,7 @@ function matchAdsToRecords(adsRows, records) {
       duplicateRecords.push({
         ad,
         candidates: projectCodeCandidates,
-        reason: '晨报/投手表存在多条相同 项目+标准用户名，且无法通过XMP原始投手唯一定位',
+        reason: '晨报/投手表存在多条相同 项目+标准用户名，且无法通过XMP投手唯一定位',
       });
     } else {
       unmatched.push({
@@ -1107,6 +1111,14 @@ function formatMoneyCents(value) {
   return (value / 100).toFixed(2);
 }
 
+function formatSpendCheckLines(spendCheck) {
+  if (spendCheck.ok) return ['花费校验：一致'];
+  return [
+    `花费校验：不一致（XMP ${formatMoneyCents(spendCheck.xmpTotal)} / ai匹配表 ${formatMoneyCents(spendCheck.targetTotal)} / 差额 ${formatMoneyCents(spendCheck.diff)}）`,
+    `未写入来源：抓取失败未定位 ${formatMoneyCents(spendCheck.pending.crawlFailure)} / 未匹配 ${formatMoneyCents(spendCheck.pending.unmatched)} / 重复无法判断 ${formatMoneyCents(spendCheck.pending.duplicate)}`,
+  ];
+}
+
 function sumAdsSpendCents(rows) {
   return rows.reduce((sum, row) => sum + moneyCents(row.metrics && row.metrics.spend), 0);
 }
@@ -1179,7 +1191,8 @@ function aggregateMatchesByRecord(matches) {
 function reviewRecord({ type, suggestion, reason, ad = null, record = null, candidates = [], strategy = '' }) {
   const firstCandidate = record || (candidates && candidates[0]) || null;
   const project = ad ? ad.project : firstCandidate ? firstCandidate.project : '';
-  const code = ad ? ad.code : firstCandidate ? firstCandidate.code : '';
+  const xmpCode = ad ? valueToText(ad.xmpOriginalCode || ad.originalCode || ad.code) : '';
+  const matchCode = firstCandidate ? firstCandidate.code : ad ? ad.code : '';
   const country = ad ? ad.country : firstCandidate ? firstCandidate.country : '';
   return {
     fields: {
@@ -1187,11 +1200,10 @@ function reviewRecord({ type, suggestion, reason, ad = null, record = null, cand
       '处理建议': suggestion,
       '原因': reason,
       '项目': valueToText(project),
-      'code': valueToText(code),
-      'XMP原始code': ad ? valueToText(ad.xmpOriginalCode || ad.originalCode || ad.code) : '',
+      'XMP code': valueToText(xmpCode),
+      '匹配表匹配code': valueToText(matchCode),
       '国家': valueToText(country),
-      'XMP投手': ad ? valueToText(ad.shooter) : '',
-      'XMP原始投手': ad ? valueToText(ad.xmpOriginalShooter || ad.originalShooter || ad.shooter) : '',
+      'XMP投手': ad ? valueToText(ad.xmpOriginalShooter || ad.originalShooter || ad.shooter) : '',
       '晨报投手': firstCandidate ? valueToText(firstCandidate.shooter) : '',
       '抓取状态': ad ? valueToText(ad.crawlStatus) : '',
       '花费金额': ad ? metricText(ad.metrics, 'spend') : '',
@@ -1496,31 +1508,15 @@ async function handleTextMessage(message, text) {
       message.message_id,
       [
         `处理完成：${result.targetTableName}`,
-        `目标表：${result.targetCreated ? '新建' : '复用并重写'}`,
-        `投手表：${result.sourceTableName}`,
-        `XMP数据：${result.adsRows} 条`,
-        `XMP重复合并：${result.mergedDuplicateAdsRows} 条`,
-        `XMP空白项目行：${result.ignoredAdsRows} 条`,
-        `标准用户名规则：${result.codeRuleRows} 条`,
-        `规则未命中：${result.codeRuleMissRows} 条`,
-        `投手表：${result.sourceRows} 条`,
+        ...formatSpendCheckLines(result.spendCheck),
         `匹配成功：${result.matchedRows} 条`,
-        `写入命中行：${result.matchedTargetRows} 条`,
-        `同一行累计：${result.mergedMatchedRows} 条`,
         `抓取失败：${result.crawlFailureRows} 条`,
         `投手不一致：${result.shooterMismatchRows} 条`,
-        `投手不一致已忽略：${result.ignoredShooterMismatchRows} 条`,
-        `XMP未匹配：${result.unmatchedRows + result.duplicateRows} 条`,
+        `XMP有晨报没有：${result.unmatchedRows + result.duplicateRows} 条`,
         `晨报有XMP没有：${result.shooterOnlyRows} 条`,
-        `清空旧记录：${result.deletedRows} 条`,
-        `写入ai匹配表：${result.writtenRows} 条`,
-        `花费校验：${result.spendCheck.ok ? '一致' : '不一致'}`,
-        `XMP总花费：${formatMoneyCents(result.spendCheck.xmpTotal)}`,
-        `ai匹配表总花费：${formatMoneyCents(result.spendCheck.targetTotal)}`,
-        `差额：${formatMoneyCents(result.spendCheck.diff)}`,
-        `未写入来源：抓取失败未定位 ${formatMoneyCents(result.spendCheck.pending.crawlFailure)} / 未匹配 ${formatMoneyCents(result.spendCheck.pending.unmatched)} / 重复无法判断 ${formatMoneyCents(result.spendCheck.pending.duplicate)}`,
+        `ai匹配表：`,
         result.targetUrl,
-        `核对表：${result.reviewApp.name}`,
+        `核对表：`,
         result.reviewApp.url,
       ].join('\n')
     );

@@ -53,6 +53,20 @@ function formatMoneyFromCents(value) {
 
 function reviewRowToNormalized(row) {
   const fields = row.fields || {};
+  const code = valueToText(
+    fields['匹配表匹配code'] ||
+      fields['XMP code'] ||
+      fields.code ||
+      fields.Code ||
+      fields['Code'] ||
+      fields['XMP原始code']
+  );
+  const shooter = valueToText(
+    fields['匹配表投手'] ||
+      fields['XMP投手'] ||
+      fields['晨报投手'] ||
+      fields['XMP原始投手']
+  );
   return normalizeCommon({
     recordId: row.record_id,
     sourceRow: valueToNumber(fields['XMP行号']),
@@ -60,8 +74,8 @@ function reviewRowToNormalized(row) {
     status: valueToText(fields['处理状态']),
     type: valueToText(fields['问题类型']),
     project: valueToText(fields['项目']),
-    code: valueToText(fields.code || fields.Code || fields['Code']),
-    shooter: valueToText(fields['晨报投手'] || fields['XMP投手']),
+    code,
+    shooter,
     country: valueToText(fields['国家']),
     metrics: {
       spend: valueToNumber(fields['花费金额']),

@@ -83,6 +83,9 @@ function parseBusinessDate(text, now = new Date()) {
   const short = value.match(/(?:更新)?\s*(\d{1,2})\s*[./-]\s*(\d{1,2})\s*(?:的)?\s*(?:数据)?/);
   if (short) return `${now.getFullYear()}-${short[1].padStart(2, '0')}-${short[2].padStart(2, '0')}`;
 
+  const compact = value.match(/(?:更新)?\s*(\d{1,2})(\d{2})\s*(?:的)?\s*(?:数据)?/);
+  if (compact) return `${now.getFullYear()}-${compact[1].padStart(2, '0')}-${compact[2]}`;
+
   const numeric = value.match(/(?:更新)?\s*(\d{1,2})\s*月\s*(\d{1,2})\s*(?:日|号)?\s*(?:的)?\s*(?:数据)?/);
   if (numeric) return `${now.getFullYear()}-${numeric[1].padStart(2, '0')}-${numeric[2].padStart(2, '0')}`;
 
