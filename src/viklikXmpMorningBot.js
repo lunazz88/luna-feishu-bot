@@ -631,9 +631,11 @@ function matchAdsToRecords(adsRows, records) {
   const shooterMismatches = [];
   const ignoredShooterMismatches = [];
   const duplicateRecords = [];
+  let fallbackCodeMatches = 0;
 
   function addMatch(ad, record, strategy, candidatesForReview = [record]) {
     matches.push({ ad, record, strategy });
+    if (!ad.codeRuleMatched) fallbackCodeMatches += 1;
     const compareShooterNorm = xmpShooterNorm(ad) || ad.shooterNorm;
     if (!compareShooterNorm || !record.shooterNorm || compareShooterNorm === record.shooterNorm) return;
     const mismatch = {
@@ -664,7 +666,7 @@ function matchAdsToRecords(adsRows, records) {
       continue;
     }
 
-    if (!ad.codeRuleMatched) {
+    if (!ad.codeRuleMatched && !projectCodeCandidates.length) {
       unmatched.push({
         ad,
         candidates: [],
@@ -677,11 +679,23 @@ function matchAdsToRecords(adsRows, records) {
     const standardShooterCandidate = uniqueCandidateByShooter(projectCodeCandidates, ad.shooterNorm);
 
     if (originalShooterCandidate) {
-      addMatch(ad, originalShooterCandidate, 'project+standard_user+xmp_original_shooter');
+      addMatch(
+        ad,
+        originalShooterCandidate,
+        ad.codeRuleMatched ? 'project+standard_user+xmp_original_shooter' : 'project+strong_code+xmp_original_shooter'
+      );
     } else if (candidates.length === 1) {
-      addMatch(ad, candidates[0], 'project+standard_user+mapped_shooter');
+      addMatch(
+        ad,
+        candidates[0],
+        ad.codeRuleMatched ? 'project+standard_user+mapped_shooter' : 'project+strong_code+shooter'
+      );
     } else if (standardShooterCandidate) {
-      addMatch(ad, standardShooterCandidate, 'project+standard_user+mapped_shooter');
+      addMatch(
+        ad,
+        standardShooterCandidate,
+        ad.codeRuleMatched ? 'project+standard_user+mapped_shooter' : 'project+strong_code+shooter'
+      );
     } else if (candidates.length > 1) {
       duplicateRecords.push({
         ad,
@@ -690,7 +704,12 @@ function matchAdsToRecords(adsRows, records) {
       });
     } else if (projectCodeCandidates.length === 1) {
       const record = projectCodeCandidates[0];
-      addMatch(ad, record, 'project+standard_user', projectCodeCandidates);
+      addMatch(
+        ad,
+        record,
+        ad.codeRuleMatched ? 'project+standard_user' : 'project+strong_code',
+        projectCodeCandidates
+      );
     } else if (projectCodeCandidates.length > 1) {
       duplicateRecords.push({
         ad,
@@ -706,7 +725,15 @@ function matchAdsToRecords(adsRows, records) {
     }
   }
 
-  return { matches, unmatched, crawlFailures, shooterMismatches, ignoredShooterMismatches, duplicateRecords };
+  return {
+    matches,
+    unmatched,
+    crawlFailures,
+    shooterMismatches,
+    ignoredShooterMismatches,
+    duplicateRecords,
+    fallbackCodeMatches,
+  };
 }
 
 function dateLabel(dateText) {
@@ -1249,6 +1276,7 @@ async function writeAiMatchTable({ feishu, baseUrl, businessDate, xmpFilePath })
     ignoredAdsRows: allAdsRows.length - reviewableAdsRows.length,
     codeRuleRows: codeRules.rows,
     codeRuleMissRows: matched.unmatched.filter((item) => !item.ad.codeRuleMatched).length,
+    codeRuleFallbackRows: matched.fallbackCodeMatches,
     sourceRows: source.records.length,
     matchedRows: matched.matches.length,
     matchedTargetRows: aggregatedMatches.matches.length,
@@ -1394,6 +1422,7 @@ async function handleTextMessage(message, text) {
         `XMP空白项目行：${result.ignoredAdsRows} 条`,
         `标准用户名规则：${result.codeRuleRows} 条`,
         `规则未命中：${result.codeRuleMissRows} 条`,
+        `规则未命中但兜底匹配：${result.codeRuleFallbackRows} 条`,
         `投手表：${result.sourceRows} 条`,
         `匹配成功：${result.matchedRows} 条`,
         `写入命中行：${result.matchedTargetRows} 条`,
