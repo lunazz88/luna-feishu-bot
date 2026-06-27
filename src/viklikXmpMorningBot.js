@@ -663,6 +663,17 @@ function matchAdsToRecords(adsRows, records) {
         candidates: projectCodeCandidates,
         reason: `XMP抓取状态非空：${valueToText(ad.crawlStatus)}`,
       });
+      const originalShooterCandidate = uniqueCandidateByShooter(projectCodeCandidates, xmpShooterNorm(ad));
+      const standardShooterCandidate = uniqueCandidateByShooter(projectCodeCandidates, ad.shooterNorm);
+      if (originalShooterCandidate) {
+        addMatch(ad, originalShooterCandidate, 'crawl_failure+project+strong_code+xmp_original_shooter');
+      } else if (candidates.length === 1) {
+        addMatch(ad, candidates[0], 'crawl_failure+project+strong_code+shooter');
+      } else if (standardShooterCandidate) {
+        addMatch(ad, standardShooterCandidate, 'crawl_failure+project+strong_code+shooter');
+      } else if (projectCodeCandidates.length === 1) {
+        addMatch(ad, projectCodeCandidates[0], 'crawl_failure+project+strong_code', projectCodeCandidates);
+      }
       continue;
     }
 
@@ -1042,7 +1053,12 @@ function sumTargetSpendCents(records) {
 function spendBreakdown(matched, targetRecords, adsRows) {
   const xmpTotal = sumAdsSpendCents(adsRows);
   const targetTotal = sumTargetSpendCents(targetRecords);
-  const crawlFailure = sumAdsSpendCents(matched.crawlFailures.map((item) => item.ad));
+  const matchedAds = new Set(matched.matches.map((match) => match.ad));
+  const crawlFailure = sumAdsSpendCents(
+    matched.crawlFailures
+      .filter((item) => !matchedAds.has(item.ad))
+      .map((item) => item.ad)
+  );
   const unmatched = sumAdsSpendCents(matched.unmatched.map((item) => item.ad));
   const duplicate = sumAdsSpendCents(matched.duplicateRecords.map((item) => item.ad));
   return {
@@ -1437,7 +1453,7 @@ async function handleTextMessage(message, text) {
         `XMP总花费：${formatMoneyCents(result.spendCheck.xmpTotal)}`,
         `ai匹配表总花费：${formatMoneyCents(result.spendCheck.targetTotal)}`,
         `差额：${formatMoneyCents(result.spendCheck.diff)}`,
-        `未写入来源：抓取失败 ${formatMoneyCents(result.spendCheck.pending.crawlFailure)} / 未匹配 ${formatMoneyCents(result.spendCheck.pending.unmatched)} / 重复无法判断 ${formatMoneyCents(result.spendCheck.pending.duplicate)}`,
+        `未写入来源：抓取失败未定位 ${formatMoneyCents(result.spendCheck.pending.crawlFailure)} / 未匹配 ${formatMoneyCents(result.spendCheck.pending.unmatched)} / 重复无法判断 ${formatMoneyCents(result.spendCheck.pending.duplicate)}`,
         result.targetUrl,
         `核对表：${result.reviewApp.name}`,
         result.reviewApp.url,
